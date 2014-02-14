@@ -1,19 +1,15 @@
 # -*- coding: utf8 -*-
-import ConfigParser
 import argparse
+import ConfigParser
 import logging
 import logging.handlers
-import sys
+import os.path
 import subprocess
+import sys
 import threading
 import traceback
-from collections import Counter
+from collections import Counter, defaultdict
 from cStringIO import StringIO
-
-
-# TODO: check config validity
-# TODO: alles in main und exceptions handlen
-# finish() darf keine exceptions werfen!
 
 # Global variables
 config = None
@@ -22,20 +18,20 @@ email_log = None
 
 def tee_log(infile, out_lines, log_level):
     def tee_thread():
-        for line in iter(infile.readline, ''):
+        for line in iter(infile.readline, ""):
             logging.log(log_level, line.strip())
             out_lines.append(line)
         infile.close()
     t = threading.Thread(target=tee_thread)
-    #t.daemon = True
+    t.daemon = True
     t.start()
     return t
 
 
 def snapraid_command(command):
     p = subprocess.Popen(
-        [config.get("snapraid", "executable"), command,
-            "--conf", config.get("snapraid", "config")],
+        [config["snapraid"]["executable"], command,
+            "--conf", config["snapraid"]["config"]],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     out = []
@@ -56,56 +52,64 @@ def send_email(success):
     from email.mime.text import MIMEText
     from email import charset
     # use quoted-printable instead of the default base64
-    charset.add_charset('utf-8', charset.SHORTEST, charset.QP)
+    charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
     if success:
         body = "SnapRAID job completed successfully:\n\n\n"
     else:
         body = "Error during SnapRAID job:\n\n\n"
     body += email_log.getvalue()
     msg = MIMEText(body, "plain", "utf-8")
-    msg['Subject'] = config.get("email", "subject") + \
-        " SUCCESS" if success else " ERROR"
-    msg['From'] = config.get("email", "from")
-    msg['To'] = config.get("email", "to")
-    smtp = {"host": config.get("smtp", "host")}
-    if config.get("smtp", "port"):
-        smtp["port"] = config.getint("smtp", "port")
-    if config.get("smtp", "ssl").lower() == "true":
+    msg["Subject"] = config["email"]["subject"] + \
+        (" SUCCESS" if success else " ERROR")
+    msg["From"] = config["email"]["from"]
+    msg["To"] = config["email"]["to"]
+    smtp = {"host": config["smtp"]["host"]}
+    if config["smtp"]["port"]:
+        smtp["port"] = config["smtp"]["port"]
+    if config["smtp"]["ssl"]:
         server = smtplib.SMTP_SSL(**smtp)
     else:
         server = smtplib.SMTP(**smtp)
-    if config.get("smtp", "user"):
-        server.login(config.get("smtp", "user"),
-                     config.get("smtp", "password"))
+    if config["smtp"]["user"]:
+        server.login(config["smtp"]["user"], config["smtp"]["password"])
     server.sendmail(
-        config.get("email", "from"),
-        [config.get("email", "to")],
+        config["email"]["from"],
+        [config["email"]["to"]],
         msg.as_string())
-    server.quit
+    server.quit()
 
 
 def finish(is_success):
+    if ("error", "success")[is_success] in config["email"]["sendon"]:
+        try:
+            send_email(is_success)
+        except:
+            logging.exception("Failed to send email")
     if is_success:
         logging.info("Run finished successfully")
     else:
         logging.error("Run failed")
-    if ((is_success and "success" in config.get("email", "send")) or
-            (not is_success and "error" in config.get("email", "send"))):
-        send_email(is_success)
     sys.exit(0 if is_success else 1)
 
 
 def load_config(file):
     global config
-    config = ConfigParser.RawConfigParser(allow_no_value=True)
-    config.add_section("smtp")
-    config.add_section("email")
-    config.add_section("snapraid")
-    config.set("snapraid", "delethreshold", 0)
-    config.add_section("logging")
-    config.set("logging", "file", None)
-    config.set("logging", "maxsize", 0)
-    config.read(file)
+    parser = ConfigParser.RawConfigParser()
+    parser.read(file)
+    sections = ["snapraid", "logging", "email", "smtp"]
+    config = dict((x, defaultdict(lambda: "")) for x in sections)
+    for section in parser.sections():
+        for (k, v) in parser.items(section):
+            config[section][k] = v.strip()
+
+    intvals = [("snapraid", "deletethreshold"), ("logging", "maxsize")]
+    for section, option in intvals:
+        try:
+            config[section][option] = int(config[section][option])
+        except ValueError:
+            config[section][option] = 0
+
+    config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
 
 
 def setup_logger():
@@ -121,16 +125,16 @@ def setup_logger():
     console_logger.setFormatter(log_format)
     root_logger.addHandler(console_logger)
 
-    if config.get("logging", "file"):
-        max_log_size = min(config.getint("logging", "maxsize"), 0) * 1024
+    if config["logging"]["file"]:
+        max_log_size = min(config["logging"]["maxsize"], 0) * 1024
         file_logger = logging.handlers.RotatingFileHandler(
-            config.get("logging", "file"),
+            config["logging"]["file"],
             maxBytes=max_log_size,
             backupCount=9)
         file_logger.setFormatter(log_format)
         root_logger.addHandler(file_logger)
 
-    if config.get("email", "send"):
+    if config["email"]["sendon"]:
         global email_log
         email_log = StringIO()
         email_logger = logging.StreamHandler(email_log)
@@ -142,16 +146,45 @@ def setup_logger():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c', '--conf', nargs=1,
-                        default='snapraid-runner.conf',
-                        help='Configuration file (default %(default)s)')
+    parser.add_argument("-c", "--conf", nargs=1,
+                        default="snapraid-runner.conf",
+                        help="Configuration file (default %(default)s)")
     args = parser.parse_args()
-    load_config(args.conf)
-    setup_logger()
 
+    try:
+        load_config(args.conf)
+    except:
+        print("unexpected exception while loading config")
+        print traceback.format_exc()
+        sys.exit(2)
+
+    try:
+        setup_logger()
+    except:
+        print("unexpected exception while setting up logging")
+        print traceback.format_exc()
+        sys.exit(2)
+
+    try:
+        run()
+    except Exception:
+        logging.exception("Run failed due to unexpected exception:")
+        finish(False)
+
+
+def run():
     logging.info("=" * 60)
     logging.info("Run started")
     logging.info("=" * 60)
+
+    if not os.path.exists(config["snapraid"]["executable"]):
+        logging.error("Snapraid executable does not exist at " +
+                      config["snapraid"]["executable"])
+        finish(False)
+    if not os.path.exists(config["snapraid"]["config"]):
+        logging.error("Snapraid config does not exist at " +
+                      config["snapraid"]["config"])
+        finish(False)
 
     logging.info("Running diff...")
     try:
@@ -165,12 +198,11 @@ def main():
     logging.info(("Diff results: {add} added,  {remove} removed,  "
                   + "{move} moved,  {update} modified").format(**diff_results))
 
-    if (config.getint("snapraid", "deletethreshold") > 0 and
-            diff_results["remove"] >
-            config.getint("snapraid", "deletethreshold")):
+    if (config["snapraid"]["deletethreshold"] >= 0 and
+            diff_results["remove"] > config["snapraid"]["deletethreshold"]):
         logging.error(
-            "Deleted files exceed delete threshold {}, aborting".format(
-            config.getint("snapraid", "deletethreshold")))
+            "Deleted files exceed delete threshold of {}, aborting".format(
+            config["snapraid"]["deletethreshold"]))
         finish(False)
 
     if (diff_results["remove"] + diff_results["add"] + diff_results["move"] +
@@ -190,22 +222,4 @@ def main():
     finish(True)
 
 
-try:
-    load_config()
-except:
-    print("unexpected exception while loading config")
-    print traceback.format_exc()
-    sys.exit(2)
-
-try:
-    setup_logger()
-except:
-    print("unexpected exception while setting up logging")
-    print traceback.format_exc()
-    sys.exit(2)
-
-try:
-    main()
-except Exception as e:
-    logging.exception("Run failed due to unexpected exception:")
-    finish(False)
+main()
