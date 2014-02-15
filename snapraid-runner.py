@@ -124,6 +124,7 @@ def load_config(file):
 
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
+    config["email"]["short"] = (config["email"]["short"].lower() == "true")
 
 
 def setup_logger():
@@ -153,8 +154,9 @@ def setup_logger():
         email_log = StringIO()
         email_logger = logging.StreamHandler(email_log)
         email_logger.setFormatter(log_format)
-        # Don't send programm stdout in email
-        email_logger.setLevel(logging.INFO)
+        if config["email"]["short"]:
+            # Don't send programm stdout in email
+            email_logger.setLevel(logging.INFO)
         root_logger.addHandler(email_logger)
 
 
