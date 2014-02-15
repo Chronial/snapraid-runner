@@ -216,6 +216,8 @@ def run():
     logging.info("*" * 60)
 
     diff_results = Counter(line.split(" ")[0] for line in diff_out)
+    diff_results = dict((x, diff_results[x]) for x in
+                        ["add", "remove", "move", "update"])
     logging.info(("Diff results: {add} added,  {remove} removed,  "
                   + "{move} moved,  {update} modified").format(**diff_results))
 
