@@ -17,6 +17,10 @@ email_log = None
 
 
 def tee_log(infile, out_lines, log_level):
+    """
+    Create a thread thot saves all the output on infile to out_lines and
+    logs every line with log_level
+    """
     def tee_thread():
         for line in iter(infile.readline, ""):
             logging.log(log_level, line.strip())
@@ -29,6 +33,10 @@ def tee_log(infile, out_lines, log_level):
 
 
 def snapraid_command(command):
+    """
+    Run snapraid command
+    Raises subprocess.CalledProcessError if errorlevel != 0
+    """
     p = subprocess.Popen(
         [config["snapraid"]["executable"], command,
             "--conf", config["snapraid"]["config"]],
