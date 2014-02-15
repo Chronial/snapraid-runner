@@ -32,14 +32,16 @@ def tee_log(infile, out_lines, log_level):
     return t
 
 
-def snapraid_command(command):
+def snapraid_command(command, args={}):
     """
     Run snapraid command
     Raises subprocess.CalledProcessError if errorlevel != 0
     """
+    arguments = ["--conf", config["snapraid"]["config"]]
+    for (k, v) in args.items():
+        arguments.extend(["--" + k, str(v)])
     p = subprocess.Popen(
-        [config["snapraid"]["executable"], command,
-            "--conf", config["snapraid"]["config"]],
+        [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     out = []
@@ -104,20 +106,24 @@ def load_config(file):
     global config
     parser = ConfigParser.RawConfigParser()
     parser.read(file)
-    sections = ["snapraid", "logging", "email", "smtp"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
             config[section][k] = v.strip()
 
-    intvals = [("snapraid", "deletethreshold"), ("logging", "maxsize")]
-    for section, option in intvals:
+    int_options = [
+        ("snapraid", "deletethreshold"), ("logging", "maxsize"),
+        ("scrub", "percentage"), ("scrub", "older-than")
+    ]
+    for section, option in int_options:
         try:
             config[section][option] = int(config[section][option])
         except ValueError:
             config[section][option] = 0
 
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
+    config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
 
 
 def setup_logger():
@@ -225,6 +231,18 @@ def run():
         logging.error(e)
         finish(False)
     logging.info("*" * 60)
+
+    if config["scrub"]["enabled"]:
+        logging.info("Running scrub...")
+        try:
+            snapraid_command("scrub", {
+                "percentage": config["scrub"]["percentage"],
+                "older-than": config["scrub"]["older-than"],
+            })
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            finish(False)
+        logging.info("*" * 60)
 
     logging.info("All done")
     finish(True)
