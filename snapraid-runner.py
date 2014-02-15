@@ -165,6 +165,11 @@ def main():
                         help="Configuration file (default %(default)s)")
     args = parser.parse_args()
 
+    if not os.path.exists(args.conf):
+        print("snapraid-runner configuration file not found")
+        args.print_help()
+        sys.exit(2)
+
     try:
         load_config(args.conf)
     except:
