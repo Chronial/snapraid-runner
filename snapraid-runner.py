@@ -231,15 +231,14 @@ def run():
     if (diff_results["remove"] + diff_results["add"] + diff_results["move"] +
             diff_results["update"] == 0):
         logging.info("No changes detected, no sync required")
-        finish(True)
-
-    logging.info("Running sync...")
-    try:
-        snapraid_command("sync")
-    except subprocess.CalledProcessError as e:
-        logging.error(e)
-        finish(False)
-    logging.info("*" * 60)
+    else:
+        logging.info("Running sync...")
+        try:
+            snapraid_command("sync")
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            finish(False)
+        logging.info("*" * 60)
 
     if config["scrub"]["enabled"]:
         logging.info("Running scrub...")
