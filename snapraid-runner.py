@@ -23,6 +23,10 @@ def tee_log(infile, out_lines, log_level):
     """
     def tee_thread():
         for line in iter(infile.readline, ""):
+            line = line.strip()
+            # Do not log the progress display
+            if "\r" in line:
+                line = line.split("\r")[-1]
             logging.log(log_level, line.strip())
             out_lines.append(line)
         infile.close()
