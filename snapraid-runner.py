@@ -106,10 +106,10 @@ def finish(is_success):
     sys.exit(0 if is_success else 1)
 
 
-def load_config(file):
+def load_config(args):
     global config
     parser = ConfigParser.RawConfigParser()
-    parser.read(file)
+    parser.read(args.conf)
     sections = ["snapraid", "logging", "email", "smtp", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
@@ -129,6 +129,9 @@ def load_config(file):
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
+
+    if args.scrub is not None:
+        config["scrub"]["enabled"] = args.scrub
 
 
 def setup_logger():
@@ -166,9 +169,13 @@ def setup_logger():
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--conf", nargs=1,
+    parser.add_argument("-c", "--conf",
                         default="snapraid-runner.conf",
-                        help="Configuration file (default %(default)s)")
+                        metavar="CONFIG",
+                        help="Configuration file (default: %(default)s)")
+    parser.add_argument("--no-scrub", action='store_false',
+                        dest='scrub', default=None,
+                        help="Do not scrub (overrides config)")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
@@ -177,7 +184,7 @@ def main():
         sys.exit(2)
 
     try:
-        load_config(args.conf)
+        load_config(args)
     except:
         print("unexpected exception while loading config")
         print traceback.format_exc()
