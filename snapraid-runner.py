@@ -7,6 +7,7 @@ import os.path
 import subprocess
 import sys
 import threading
+import time
 import traceback
 from collections import Counter, defaultdict
 from cStringIO import StringIO
@@ -55,6 +56,8 @@ def snapraid_command(command, args={}):
     for t in threads:
         t.join()
     ret = p.wait()
+    # sleep for a while to make pervent output mixup
+    time.sleep(0.3)
     if ret == 0:
         return out
     else:
