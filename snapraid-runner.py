@@ -217,11 +217,12 @@ def run():
     logging.info("Run started")
     logging.info("=" * 60)
 
-    if not os.path.exists(config["snapraid"]["executable"]):
-        logging.error("Snapraid executable does not exist at " +
-                      config["snapraid"]["executable"])
+    if not os.path.isfile(config["snapraid"]["executable"]):
+        logging.error("The configured snapraid executable \"{}\" does not "
+                      "exist or is not a file".format(
+                          config["snapraid"]["executable"]))
         finish(False)
-    if not os.path.exists(config["snapraid"]["config"]):
+    if not os.path.isfile(config["snapraid"]["config"]):
         logging.error("Snapraid config does not exist at " +
                       config["snapraid"]["config"])
         finish(False)

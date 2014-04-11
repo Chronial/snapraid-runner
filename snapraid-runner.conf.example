@@ -1,6 +1,6 @@
 [snapraid]
-; path to the snapraid executable
-executable =
+; path to the snapraid executable (e.g. /bin/snapraid)
+executable = snapraid
 ; path to the snapraid config to be used
 config = snapraid.conf
 ; abort operation if there are more deletes than this, set to -1 to disable
