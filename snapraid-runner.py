@@ -68,6 +68,11 @@ def send_email(success):
     import smtplib
     from email.mime.text import MIMEText
     from email import charset
+
+    if len(config["smtp"]["host"]) == 0:
+        logging.error("Failed to send email because smtp host is not set")
+        return
+
     # use quoted-printable instead of the default base64
     charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
     if success:
