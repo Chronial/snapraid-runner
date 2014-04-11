@@ -183,7 +183,7 @@ def main():
 
     if not os.path.exists(args.conf):
         print("snapraid-runner configuration file not found")
-        args.print_help()
+        parser.print_help()
         sys.exit(2)
 
     try:
