@@ -21,4 +21,5 @@ scheduler.
   that number exceeds a set threshold.
 * Can create a size-limited rotated logfile.
 * Can send notification emails after each run or only for failures.
+* Can send push notifications after each run via Pushbullet
 * Can run `scrub` after `sync`

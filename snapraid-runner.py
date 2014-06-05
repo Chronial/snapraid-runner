@@ -100,8 +100,21 @@ def send_email(success):
         msg.as_string())
     server.quit()
 
-
+def send_push(success):
+    import os
+	
+    if success:
+        body = "SnapRAID job completed successfully"
+    else:
+        body = "Error during SnapRAID job"
+    os.system('curl -u '+config["pushbullet"]["apikey"]+': -d device_id='+config["pushbullet"]["device_id"]+' -d type=note -d title='+config["pushbullet"]["subject"]+' -d body="'+body+'" -X POST https://api.pushbullet.com/api/pushes')
+	
 def finish(is_success):
+    if config["pushbullet"]["enabled"]:
+        try:
+            send_push(is_success)
+        except:
+            logging.exception("Failed to send push")
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
             send_email(is_success)
@@ -118,7 +131,7 @@ def load_config(args):
     global config
     parser = ConfigParser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "pushbullet", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -136,6 +149,7 @@ def load_config(args):
 
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
+    config["pushbullet"]["enabled"] = (config["pushbullet"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
 
     if args.scrub is not None:

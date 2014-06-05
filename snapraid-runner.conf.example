@@ -14,7 +14,7 @@ maxsize = 5000
 
 [email]
 ; when to send an email, comma-separated list of [success, error]
-sendon = success,error
+sendon = success, error
 ; set to false to get full programm output via email
 short = true
 subject = [SnapRAID] Status Report:
@@ -29,6 +29,15 @@ port =
 ssl = false
 user =
 password =
+
+[pushbullet]
+; set to true push notifications to your Smartphone via pushbullet
+enabled = false
+subject = "[SnapRAID] Status Report"
+; API Key: https://www.pushbullet.com/account
+apikey = 
+; under linux: curl -u <YOUR API KEY>: https://api.pushbullet.com/api/devices
+device_id = 
 
 [scrub]
 ; set to true to run scrub after sync
