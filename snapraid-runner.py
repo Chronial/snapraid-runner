@@ -37,7 +37,7 @@ def tee_log(infile, out_lines, log_level):
     return t
 
 
-def snapraid_command(command, args={}):
+def snapraid_command(command, args={}, ignore_errors=False):
     """
     Run snapraid command
     Raises subprocess.CalledProcessError if errorlevel != 0
@@ -58,7 +58,7 @@ def snapraid_command(command, args={}):
     ret = p.wait()
     # sleep for a while to make pervent output mixup
     time.sleep(0.3)
-    if ret == 0:
+    if ret == 0 or ignore_errors:
         return out
     else:
         raise subprocess.CalledProcessError(ret, "snapraid " + command)
@@ -228,11 +228,7 @@ def run():
         finish(False)
 
     logging.info("Running diff...")
-    try:
-        diff_out = snapraid_command("diff")
-    except subprocess.CalledProcessError as e:
-        logging.error(e)
-        finish(False)
+    diff_out = snapraid_command("diff", ignore_errors=True)
     logging.info("*" * 60)
 
     diff_results = Counter(line.split(" ")[0] for line in diff_out)
