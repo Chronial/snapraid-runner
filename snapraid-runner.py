@@ -93,6 +93,9 @@ def send_email(success):
     else:
         server = smtplib.SMTP(**smtp)
     if config["smtp"]["user"]:
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
         server.login(config["smtp"]["user"], config["smtp"]["password"])
     server.sendmail(
         config["email"]["from"],
