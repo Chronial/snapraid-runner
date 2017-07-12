@@ -1,3 +1,4 @@
+#!/usr/bin/python
 # -*- coding: utf8 -*-
 import argparse
 import ConfigParser
@@ -9,9 +10,11 @@ import sys
 import threading
 import time
 import traceback
+import json
+import requests
 from collections import Counter, defaultdict
 from cStringIO import StringIO
-
+from slackclient import SlackClient
 # Global variables
 config = None
 email_log = None
@@ -101,7 +104,58 @@ def send_email(success):
     server.quit()
 
 
+def send_pushbullet(success):
+	
+    headers = {"Accept": "application/json", "Content-Type": "application/json", "User-Agent": "Snapraid-runner"}
+
+    if success:
+        body = "SnapRAID job completed successfully\n\n\n"
+    else:
+        body = "Error during SnapRAID job\n\n\n"
+
+    postdata = {"type": "note", "title": config["pushbullet"]["title"], "body": body}
+
+    resp = requests.post('https://api.pushbullet.com/api/pushes',data=postdata, auth=(config["pushbullet"]["apikey"],''))
+
+
+def send_slack(success):
+
+    if success:
+        body = "SnapRAID job completed successfully\n\n\n"
+    else:
+        body = "Error during SnapRAID job\n\n\n"
+
+    slack_token = config["slack"]["apikey"]
+
+    sc = SlackClient(slack_token)
+
+    sc.api_call(
+        "chat.postMessage",
+        username=config["slack"]["user"],
+        icon_emoji=config["slack"]["icon"],
+        channel=config["slack"]["channel"],
+        text=body
+    )
+
+
+
+
 def finish(is_success):
+    if config["pushbullet"]["enabled"]:
+        try:
+            logging.info("Attempting to send Pushbullet notification.")
+            send_pushbullet(is_success)
+
+        except:
+            logging.exception("Pushbullet notification failed.")
+    if config["slack"]["enabled"]:
+        try:
+            logging.info("Attempting to send Slack notification.")
+            send_slack(is_success)
+
+        except:
+            logging.exception("Slack notification failed.")
+
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
             send_email(is_success)
@@ -118,7 +172,7 @@ def load_config(args):
     global config
     parser = ConfigParser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "pushbullet", "slack", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -137,6 +191,8 @@ def load_config(args):
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
+    config["pushbullet"]["enabled"] = (config["pushbullet"]["enabled"].lower() == "true")
+    config["slack"]["enabled"] = (config["slack"]["enabled"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
@@ -156,7 +212,7 @@ def setup_logger():
     root_logger.addHandler(console_logger)
 
     if config["logging"]["file"]:
-        max_log_size = min(config["logging"]["maxsize"], 0) * 1024
+        max_log_size = max(config["logging"]["maxsize"], 0) * 1024
         file_logger = logging.handlers.RotatingFileHandler(
             config["logging"]["file"],
             maxBytes=max_log_size,
@@ -178,7 +234,7 @@ def setup_logger():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--conf",
-                        default="snapraid-runner.conf",
+                        default="snapraid-runner ",
                         metavar="CONFIG",
                         help="Configuration file (default: %(default)s)")
     parser.add_argument("--no-scrub", action='store_false',

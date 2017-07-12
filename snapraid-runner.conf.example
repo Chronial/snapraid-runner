@@ -35,3 +35,21 @@ password =
 enabled = false
 percentage = 12
 older-than = 10
+
+
+[pushbullet]
+; set to true to enable Pushbullet notification support
+enabled = true
+title = [SnapRAID] Status Report
+; API Key: https://www.pushbullet.com/account
+apikey = 
+
+[slack]
+; set to true to enable Pushbullet notification support
+enabled = true
+title = [SnapRAID] Status Report
+; API Key: https://www.pushbullet.com/account
+apikey =
+channel = #
+user = 
+icon = 
