@@ -1,4 +1,6 @@
 # -*- coding: utf8 -*-
+from __future__ import division
+
 import argparse
 import ConfigParser
 import logging
@@ -79,7 +81,19 @@ def send_email(success):
         body = "SnapRAID job completed successfully:\n\n\n"
     else:
         body = "Error during SnapRAID job:\n\n\n"
-    body += email_log.getvalue()
+
+    log = email_log.getvalue()
+    maxsize = config['email'].get('maxsize', 500) * 1024
+    if maxsize and len(log) > maxsize:
+        cut_lines = log.count("\n", maxsize//2, -maxsize//2)
+        log = (
+            "NOTE: Log was too big for email and was shortened\n\n" +
+            log[:maxsize//2] +
+            "[...]\n\n\n --- LOG WAS TOO BIG - {} LINES REMOVED --\n\n\n[...]".format(
+                cut_lines) +
+            log[-maxsize//2:])
+    body += log
+
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = config["email"]["subject"] + \
         (" SUCCESS" if success else " ERROR")
@@ -126,7 +140,7 @@ def load_config(args):
 
     int_options = [
         ("snapraid", "deletethreshold"), ("logging", "maxsize"),
-        ("scrub", "percentage"), ("scrub", "older-than")
+        ("scrub", "percentage"), ("scrub", "older-than"), ("email", "maxsize"),
     ]
     for section, option in int_options:
         try:

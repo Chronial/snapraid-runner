@@ -22,3 +22,14 @@ scheduler.
 * Can create a size-limited rotated logfile.
 * Can send notification emails after each run or only for failures.
 * Can run `scrub` after `sync`
+
+## Changelog
+###v0.3 (20 Jul 2017)
+* Limit size of sent emails
+
+###v0.2 (27 Apr 2015)
+* Fix compatibility with Snapraid 8.0
+* Allow disabling of scrub from command line
+
+###v0.1 (16 Feb 2014)
+* Initial release

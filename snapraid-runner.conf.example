@@ -20,6 +20,8 @@ short = true
 subject = [SnapRAID] Status Report:
 from =
 to =
+; maximum email size in KiB
+maxsize = 500
 
 [smtp]
 host =
