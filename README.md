@@ -24,12 +24,12 @@ scheduler.
 * Can run `scrub` after `sync`
 
 ## Changelog
-###v0.3 (20 Jul 2017)
+### v0.3 (20 Jul 2017)
 * Limit size of sent emails
 
-###v0.2 (27 Apr 2015)
+### v0.2 (27 Apr 2015)
 * Fix compatibility with Snapraid 8.0
 * Allow disabling of scrub from command line
 
-###v0.1 (16 Feb 2014)
+### v0.1 (16 Feb 2014)
 * Initial release
