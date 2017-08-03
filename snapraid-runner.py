@@ -151,7 +151,6 @@ def load_config(args):
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
-
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
 
     if args.scrub is not None:
