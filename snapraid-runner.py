@@ -246,10 +246,8 @@ def run():
 	logging.info("Running touch...")
 	try:
 		snapraid_command("touch")
-	except subprocess.CalledProcessError as e:
-		logging.error(e)
-		finish(False)
 	logging.info("*" * 60)
+
     logging.info("Running diff...")
     diff_out = snapraid_command("diff", ignore_errors=True)
     logging.info("*" * 60)
