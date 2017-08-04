@@ -151,6 +151,7 @@ def load_config(args):
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
+    config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
@@ -246,6 +247,11 @@ def run():
         logging.error("Snapraid config does not exist at " +
                       config["snapraid"]["config"])
         finish(False)
+
+    if config["snapraid"]["touch"]:
+	logging.info("Running touch...")
+	snapraid_command("touch")
+	logging.info("*" * 60)
 
     logging.info("Running diff...")
     diff_out = snapraid_command("diff", ignore_errors=True)
