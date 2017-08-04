@@ -155,6 +155,9 @@ def load_config(args):
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
 
+    if args.deletethreshold is not None:
+        config["snapraid"]["deletethreshold"] = args.deletethreshold
+
 
 def setup_logger():
     log_format = logging.Formatter(
@@ -198,6 +201,9 @@ def main():
     parser.add_argument("--no-scrub", action='store_false',
                         dest='scrub', default=None,
                         help="Do not scrub (overrides config)")
+    parser.add_argument("-d", "--deletethreshold", type=int,
+                        default=None, metavar='N',
+                        help="Number of deletes to allow (overrides config)")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
