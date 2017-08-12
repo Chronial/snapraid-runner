@@ -243,9 +243,9 @@ def run():
         finish(False)
 
     if config["snapraid"]["touch"]:
-	logging.info("Running touch...")
-	snapraid_command("touch")
-	logging.info("*" * 60)
+        logging.info("Running touch...")
+        snapraid_command("touch")
+        logging.info("*" * 60)
 
     logging.info("Running diff...")
     diff_out = snapraid_command("diff", ignore_errors=True)
