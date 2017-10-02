@@ -298,6 +298,8 @@ def run():
 
     if config["smart"]["enabled"]:
         logging.info("Running SMART...")
+        # Expand PATH to include /usr/sbin for running smartctl from cron
+        os.environ["PATH"] += os.pathsep + "/usr/sbin"
         try:
             snapraid_command("smart")
         except subprocess.CalledProcessError as e:
