@@ -6,6 +6,7 @@ import ConfigParser
 import logging
 import logging.handlers
 import os.path
+import platform
 import subprocess
 import sys
 import threading
@@ -52,9 +53,14 @@ def snapraid_command(command, args={}, ignore_errors=False):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
     out = []
-    threads = [
-        tee_log(p.stdout, out, logging.OUTPUT),
-        tee_log(p.stderr, [], logging.OUTERR)]
+    if command == 'smart':
+        threads = [
+            tee_log(p.stdout, out, logging.SMART),
+            tee_log(p.stderr, [], logging.OUTERR)]
+    else:
+        threads = [
+            tee_log(p.stdout, out, logging.OUTPUT),
+            tee_log(p.stderr, [], logging.OUTERR)]
     for t in threads:
         t.join()
     ret = p.wait()
@@ -134,7 +140,7 @@ def load_config(args):
     global config
     parser = ConfigParser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "smart"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -153,6 +159,7 @@ def load_config(args):
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["smtp"]["tls"] = (config["smtp"]["tls"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
+    config["smart"]["enabled"] = (config["smart"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
 
@@ -168,6 +175,9 @@ def setup_logger():
     logging.addLevelName(logging.OUTPUT, "OUTPUT")
     logging.OUTERR = 25
     logging.addLevelName(logging.OUTERR, "OUTERR")
+    # Set separate SMART logging level to always output SMART logging when either "verbose" or "short" mode is set in the snapraid-runner email config
+    logging.SMART = 26
+    logging.addLevelName(logging.SMART, "SMART")
     root_logger.setLevel(logging.OUTPUT)
     console_logger = logging.StreamHandler(sys.stdout)
     console_logger.setFormatter(log_format)
@@ -286,6 +296,45 @@ def run():
                 "percentage": config["scrub"]["percentage"],
                 "older-than": config["scrub"]["older-than"],
             })
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            finish(False)
+        logging.info("*" * 60)
+
+    if config["smart"]["enabled"]:
+        logging.info("Running SMART...")
+        # Expand PATH to include /usr/sbin for running smartctl from cron for Linux and Mac systems
+        # cron needs full path to /usr/sbin for the 'snapraid smart' command to find the 'smartctl' command correctly
+        # /usr/sbin is not in cron's PATH by default when editing root user's crontab using 'crontab -e' as root
+        if platform.system() == "Linux":
+            if os.path.exists("/usr/sbin/smartctl"):
+                os.environ["PATH"] += os.pathsep + "/usr/sbin"
+            else:
+                logging.error("Cannot locate smartctl, is smartmontools installed?")
+                # Without explicitly exiting, the program will execute the "snapraid smart" command even if we didn't find smartctl in a known location
+                # If the user's PATH includes the non-standard location, the SMART data will output, abeit with this error message in the logs
+        # On Mac the .pkg isntaller (from the downloaded .dmg) installs to '/usr/local/sbin' and Homebrew installs to '/usr/local/bin'
+        elif platform.system() == "Darwin":
+            if os.path.exists("/usr/local/sbin/smartctl"):
+                os.environ["PATH"] += os.pathsep + "/usr/local/sbin"
+            elif os.path.exists("/usr/local/bin/smartctl"):
+                os.environ["PATH"] += os.pathsep + "/usr/local/bin"
+            else:
+                logging.error("Cannot locate smartctl, is smartmontools installed?")
+                # Without explicitly exiting, the program will execute the "snapraid smart" command even if we didn't find smartctl in a known location
+                # If the user's PATH includes the non-standard location, the SMART data will output, abeit with this error message in the logs
+        elif platform.system() == "Windows":
+            if os.path.exists("C:/Program Files/smartmontools/bin/smartctl.exe") or os.path.exists("C:/Program Files (x86)/smartmontools/bin/smartctl.exe"):
+            # Windows machines have smartmontools added to PATH that Task Scheduler calls without additional configuration 
+                pass
+            else:
+                logging.error("Cannot locate smartctl, is smartmontools installed?")
+                # Without explicitly exiting, the program will execute the "snapraid smart" command even if we didn't find smartctl in a known location
+                # If the user's PATH includes the non-standard location, the SMART data will output, abeit with this error message in the logs
+        else:
+            print platform.system(), "systems are not supported for SMART monitoring from snapraid-runner at this time"
+        try:
+            snapraid_command("smart")
         except subprocess.CalledProcessError as e:
             logging.error(e)
             finish(False)

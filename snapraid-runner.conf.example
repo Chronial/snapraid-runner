@@ -40,3 +40,8 @@ password =
 enabled = false
 percentage = 12
 older-than = 10
+
+[smart]
+; Mac OS & Windows users must manually install smartmontools before enabling!
+; set to true to run smart after sync and scrub
+enabled = false
