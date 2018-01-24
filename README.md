@@ -26,6 +26,7 @@ scheduler.
 ## Changelog
 ### Unreleased
 * Add support for running `snapraid touch` (by ShoGinn, PR-11)
+* Add SMTP TLS support
 
 ### v0.3 (20 Jul 2017)
 * Limit size of sent emails
