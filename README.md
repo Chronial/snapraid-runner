@@ -15,9 +15,15 @@ scheduler.
   edit its contents. You need to at least configure `snapraid.exectable` and
   `snapraid.config`.
 * Run the script via `python snapraid-runner.py`.
-* If you want to enable SMART monitoring on Windows or Mac OS, you must first
-  download and install [smartmontools](https://www.smartmontools.org/wiki/Download).
-  Most Linux distributions will have smartmontools installed by default.
+
+## Features
+* Runs `diff` before `sync` to see how many files were deleted and aborts if
+  that number exceeds a set threshold.
+* Can create a size-limited rotated logfile.
+* Can send notification emails after each run or only for failures.
+* Can run `scrub` after `sync`
+* Can run `smart`. For this to work, you need [smartmontools](https://www.smartmontools.org/wiki/Download).
+  Most Linux distributions will have it installed installed by default.
   * Windows users may install using the packaged .exe installer found at this link or
     use [Chocolatey](https://chocolatey.org/) (i.e., `choco install smartmontools`).
   * Mac OS users may install using the packaged .dmg installer found at this link or
@@ -26,16 +32,10 @@ scheduler.
     your distribution's package manager to install `smartmontools`
     (e.g., `apt-get install smartmontools`, `yum install smartmontools`, etc.)
 
-## Features
-* Runs `diff` before `sync` to see how many files were deleted and aborts if
-  that number exceeds a set threshold.
-* Can create a size-limited rotated logfile.
-* Can send notification emails after each run or only for failures.
-* Can run `scrub` after `sync`
-
 ## Changelog
 ### Unreleased
 * Add support for running `snapraid touch` (by ShoGinn, PR-11)
+* Add support for running `snapraid smart` (by k3vmcd, PR-15)
 
 ### v0.3 (20 Jul 2017)
 * Limit size of sent emails
