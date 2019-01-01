@@ -106,6 +106,8 @@ def send_email(success):
         server = smtplib.SMTP_SSL(**smtp)
     else:
         server = smtplib.SMTP(**smtp)
+        if config["smtp"]["tls"]:
+            server.starttls()
     if config["smtp"]["user"]:
         server.login(config["smtp"]["user"], config["smtp"]["password"])
     server.sendmail(
@@ -149,6 +151,7 @@ def load_config(args):
             config[section][option] = 0
 
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
+    config["smtp"]["tls"] = (config["smtp"]["tls"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
@@ -249,9 +252,9 @@ def run():
         finish(False)
 
     if config["snapraid"]["touch"]:
-	logging.info("Running touch...")
-	snapraid_command("touch")
-	logging.info("*" * 60)
+        logging.info("Running touch...")
+        snapraid_command("touch")
+        logging.info("*" * 60)
 
     logging.info("Running diff...")
     diff_out = snapraid_command("diff", ignore_errors=True)

@@ -31,6 +31,7 @@ host =
 port =
 ; set to "true" to activate
 ssl = false
+tls = false
 user =
 password =
 
