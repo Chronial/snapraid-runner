@@ -21,7 +21,7 @@ email_log = None
 
 def tee_log(infile, out_lines, log_level):
     """
-    Create a thread thot saves all the output on infile to out_lines and
+    Create a thread that saves all the output on infile to out_lines and
     logs every line with log_level
     """
     def tee_thread():
