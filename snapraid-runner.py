@@ -1,8 +1,8 @@
+#!/usr/bin/env python3
 # -*- coding: utf8 -*-
 from __future__ import division
 
 import argparse
-import ConfigParser
 import logging
 import logging.handlers
 import os.path
@@ -12,7 +12,13 @@ import threading
 import time
 import traceback
 from collections import Counter, defaultdict
-from cStringIO import StringIO
+
+if sys.version_info[0] > 2:
+    import configparser
+    from io import StringIO
+else:
+    import ConfigParser as configparser
+    from cStringIO import StringIO
 
 # Global variables
 config = None
@@ -50,7 +56,9 @@ def snapraid_command(command, args={}, ignore_errors=False):
     p = subprocess.Popen(
         [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.PIPE,
+        universal_newlines=True
+    )
     out = []
     threads = [
         tee_log(p.stdout, out, logging.OUTPUT),
@@ -132,7 +140,7 @@ def finish(is_success):
 
 def load_config(args):
     global config
-    parser = ConfigParser.RawConfigParser()
+    parser = configparser.RawConfigParser()
     parser.read(args.conf)
     sections = ["snapraid", "logging", "email", "smtp", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
@@ -213,14 +221,14 @@ def main():
         load_config(args)
     except:
         print("unexpected exception while loading config")
-        print traceback.format_exc()
+        print(traceback.format_exc())
         sys.exit(2)
 
     try:
         setup_logger()
     except:
         print("unexpected exception while setting up logging")
-        print traceback.format_exc()
+        print(traceback.format_exc())
         sys.exit(2)
 
     try:
