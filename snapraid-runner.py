@@ -93,13 +93,13 @@ def send_email(success):
     log = email_log.getvalue()
     maxsize = config['email'].get('maxsize', 500) * 1024
     if maxsize and len(log) > maxsize:
-        cut_lines = log.count("\n", maxsize//2, -maxsize//2)
+        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
         log = (
             "NOTE: Log was too big for email and was shortened\n\n" +
-            log[:maxsize//2] +
+            log[:maxsize // 2] +
             "[...]\n\n\n --- LOG WAS TOO BIG - {} LINES REMOVED --\n\n\n[...]".format(
                 cut_lines) +
-            log[-maxsize//2:])
+            log[-maxsize // 2:])
     body += log
 
     msg = MIMEText(body, "plain", "utf-8")
@@ -129,7 +129,7 @@ def finish(is_success):
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
             send_email(is_success)
-        except:
+        except Exception:
             logging.exception("Failed to send email")
     if is_success:
         logging.info("Run finished successfully")
@@ -219,14 +219,14 @@ def main():
 
     try:
         load_config(args)
-    except:
+    except Exception:
         print("unexpected exception while loading config")
         print(traceback.format_exc())
         sys.exit(2)
 
     try:
         setup_logger()
-    except:
+    except Exception:
         print("unexpected exception while setting up logging")
         print(traceback.format_exc())
         sys.exit(2)
@@ -265,14 +265,14 @@ def run():
     diff_results = Counter(line.split(" ")[0] for line in diff_out)
     diff_results = dict((x, diff_results[x]) for x in
                         ["add", "remove", "move", "update"])
-    logging.info(("Diff results: {add} added,  {remove} removed,  "
-                  + "{move} moved,  {update} modified").format(**diff_results))
+    logging.info(("Diff results: {add} added,  {remove} removed,  " +
+                  "{move} moved,  {update} modified").format(**diff_results))
 
     if (config["snapraid"]["deletethreshold"] >= 0 and
             diff_results["remove"] > config["snapraid"]["deletethreshold"]):
         logging.error(
             "Deleted files exceed delete threshold of {}, aborting".format(
-            config["snapraid"]["deletethreshold"]))
+                config["snapraid"]["deletethreshold"]))
         finish(False)
 
     if (diff_results["remove"] + diff_results["add"] + diff_results["move"] +
