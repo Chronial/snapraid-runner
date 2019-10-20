@@ -52,9 +52,14 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     """
     arguments = ["--conf", config["snapraid"]["config"]]
     for (k, v) in args.items():
-        arguments.extend(["--" + k, str(v)])
+        new_arg = ["--" + k]
+        if v is not None:
+            new_arg.append(str(v))
+        arguments.extend(new_arg)
+    full_cmd = [config["snapraid"]["executable"], command] + arguments
+    logging.info(' '.join(full_cmd))
     p = subprocess.Popen(
-        [config["snapraid"]["executable"], command] + arguments,
+        full_cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         universal_newlines=True
@@ -210,6 +215,9 @@ def main():
     parser.add_argument("--no-scrub", action='store_false',
                         dest='scrub', default=None,
                         help="Do not scrub (overrides config)")
+    parser.add_argument("-q", "--quiet", action='store_false',
+                        dest='quiet', default=None,
+                        help="Prints less information by removing progress logs")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
@@ -232,13 +240,13 @@ def main():
         sys.exit(2)
 
     try:
-        run()
+        run(args)
     except Exception:
         logging.exception("Run failed due to unexpected exception:")
         finish(False)
 
 
-def run():
+def run(args):
     logging.info("=" * 60)
     logging.info("Run started")
     logging.info("=" * 60)
@@ -281,7 +289,10 @@ def run():
     else:
         logging.info("Running sync...")
         try:
-            snapraid_command("sync")
+            command_args = {}
+            if args.quiet is not None:
+                command_args["quiet"] = None
+            snapraid_command("sync", command_args)
         except subprocess.CalledProcessError as e:
             logging.error(e)
             finish(False)
@@ -290,10 +301,13 @@ def run():
     if config["scrub"]["enabled"]:
         logging.info("Running scrub...")
         try:
-            snapraid_command("scrub", {
+            command_args = {
                 "percentage": config["scrub"]["percentage"],
                 "older-than": config["scrub"]["older-than"],
-            })
+            }
+            if args.quiet is not None:
+                command_args["quiet"] = None
+            snapraid_command("scrub", command_args)
         except subprocess.CalledProcessError as e:
             logging.error(e)
             finish(False)
