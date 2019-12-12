@@ -25,6 +25,15 @@ It supports Windows, Linux and macOS and runs on both python2 and python3.
 * Can create a size-limited rotated logfile.
 * Can send notification emails after each run or only for failures.
 * Can run `scrub` after `sync`
+* Can run `smart`. For this to work, you need [smartmontools](https://www.smartmontools.org/wiki/Download).
+  Most Linux distributions will have it installed installed by default.
+  * Windows users may install using the packaged .exe installer found at this link or
+    use [Chocolatey](https://chocolatey.org/) (i.e., `choco install smartmontools`).
+  * Mac OS users may install using the packaged .dmg installer found at this link or
+    use [Homebrew](https://brew.sh/) (i.e., `brew install smartmontools`).
+  * Linux users may check for smartmontools using `smartctl -V`, if not installed use
+    your distribution's package manager to install `smartmontools`
+    (e.g., `apt-get install smartmontools`, `yum install smartmontools`, etc.)
 
 ## Changelog
 ### v0.4 (17 Aug 2019)

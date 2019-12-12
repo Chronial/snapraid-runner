@@ -165,6 +165,7 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["snapraid"]["smart"] = (config["snapraid"]["smart"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
@@ -261,7 +262,11 @@ def run():
         logging.info("*" * 60)
     if config["snapraid"]["smart"]:
         logging.info("Running smart...")
-        snapraid_command("smart", log_output=True)
+        try:
+            snapraid_command("smart", log_output=True)
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            finish(False)
         logging.info("*" * 60)
 
     logging.info("Running diff...")
