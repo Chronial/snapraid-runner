@@ -167,6 +167,9 @@ def load_config(args):
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
 
+    if args.ignorediff is not None:
+        config["snapraid"]["deletethreshold"] = -1
+
 
 def setup_logger():
     log_format = logging.Formatter(
@@ -210,6 +213,9 @@ def main():
     parser.add_argument("--no-scrub", action='store_false',
                         dest='scrub', default=None,
                         help="Do not scrub (overrides config)")
+    parser.add_argument("--ignore-diff-threshold", action='store_true',
+                        dest='ignorediff', default=None,
+                        help="Sync if diff threshold exceeded (overrides config)")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
