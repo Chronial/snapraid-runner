@@ -262,20 +262,23 @@ def run():
         finish(False)
 
     if config["wait"]["enabled"]:
-        wait_files = []
-        for key, path in config["waitfiles"].items():
-            wait_files.append(path)
-        
         wait_delays = 0
-        while [path for key, path in config["waitfiles"].items() if os.path.isfile(path)]:
-            if wait_delays > config["wait"]["maxdelays"]:
-                logging.error("Timed out waiting for {}".format(key))
-                finish(False);
-            
-            logging.info("Waiting for {}...".format(key))
-            
-            time.sleep(config["wait"]["delay"])
-            wait_delays += 1
+
+        while wait_delays <= config["wait"]["maxdelays"]:
+            wait = False
+            for key, path in config["waitfiles"].items():
+                if os.path.isfile(path):
+                    logging.info("Waiting for {}...".format(key))
+                    
+                    time.sleep(config["wait"]["delay"])
+                    wait_delays += 1
+                    wait = True
+                    break
+            if not wait:
+                break
+        else:
+            logging.error("Timed out waiting for {}".format(key))
+            finish(False);
 
     if config["snapraid"]["touch"]:
         logging.info("Running touch...")
