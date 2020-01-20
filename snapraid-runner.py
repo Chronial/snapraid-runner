@@ -267,12 +267,12 @@ def run():
             wait_files.append(path)
         
         wait_delays = 0
-        while [f for f in wait_files if os.path.isfile(f)]:
+        while [path for key, path in config["waitfiles"].items() if os.path.isfile(path)]:
             if wait_delays > config["wait"]["maxdelays"]:
-                logging.error("Timed out waiting for other processes")
+                logging.error("Timed out waiting for {}".format(key))
                 finish(False);
             
-            logging.info("Waiting for other processes...")
+            logging.info("Waiting for {}...".format(key))
             
             time.sleep(config["wait"]["delay"])
             wait_delays += 1
