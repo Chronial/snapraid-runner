@@ -14,7 +14,7 @@ It supports Windows, Linux and macOS and runs on both python2 and python3.
 * Download [the latest release](https://github.com/Chronial/snapraid-runner/releases)
   of this script and extract it anywhere or clone this repository via git.
 * Copy/rename the `snapraid-runner.conf.example` to `snapraid-runner.conf` and
-  edit its contents. You need to at least configure `snapraid.exectable` and
+  edit its contents. You need to at least configure `snapraid.executable` and
   `snapraid.config`.
 * Run the script via `python3 snapraid-runner.py` on Linux or
  `py -3 snapraid-runner.py` on Windows.
