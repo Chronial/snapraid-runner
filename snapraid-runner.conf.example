@@ -14,26 +14,21 @@ file = snapraid.log
 ; maximum logfile size in KiB, leave empty for infinite
 maxsize = 5000
 
-[email]
-; when to send an email, comma-separated list of [success, error]
+[notification]
+enabled = true
+
+; when to send a notificariton on, comma-separated list of [success, error]
 sendon = success,error
-; set to false to get full programm output via email
+
+; set to false to get full programm output
 short = true
-subject = [SnapRAID] Status Report:
-from =
-to =
+
+; Python Apprise config.
+; https://github.com/caronc/apprise/wiki/config_yaml
+config = apprise.yml
+
 ; maximum email size in KiB
 maxsize = 500
-
-[smtp]
-host =
-; leave empty for default port
-port =
-; set to "true" to activate
-ssl = false
-tls = false
-user =
-password =
 
 [scrub]
 ; set to true to run scrub after sync

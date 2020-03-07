@@ -73,58 +73,6 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     else:
         raise subprocess.CalledProcessError(ret, "snapraid " + command)
 
-
-def send_email(success):
-    import smtplib
-    from email.mime.text import MIMEText
-    from email import charset
-
-    if len(config["smtp"]["host"]) == 0:
-        logging.error("Failed to send email because smtp host is not set")
-        return
-
-    # use quoted-printable instead of the default base64
-    charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
-    if success:
-        body = "SnapRAID job completed successfully:\n\n\n"
-    else:
-        body = "Error during SnapRAID job:\n\n\n"
-
-    log = email_log.getvalue()
-    maxsize = config['email'].get('maxsize', 500) * 1024
-    if maxsize and len(log) > maxsize:
-        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
-        log = (
-            "NOTE: Log was too big for email and was shortened\n\n" +
-            log[:maxsize // 2] +
-            "[...]\n\n\n --- LOG WAS TOO BIG - {} LINES REMOVED --\n\n\n[...]".format(
-                cut_lines) +
-            log[-maxsize // 2:])
-    body += log
-
-    msg = MIMEText(body, "plain", "utf-8")
-    msg["Subject"] = config["email"]["subject"] + \
-        (" SUCCESS" if success else " ERROR")
-    msg["From"] = config["email"]["from"]
-    msg["To"] = config["email"]["to"]
-    smtp = {"host": config["smtp"]["host"]}
-    if config["smtp"]["port"]:
-        smtp["port"] = config["smtp"]["port"]
-    if config["smtp"]["ssl"]:
-        server = smtplib.SMTP_SSL(**smtp)
-    else:
-        server = smtplib.SMTP(**smtp)
-        if config["smtp"]["tls"]:
-            server.starttls()
-    if config["smtp"]["user"]:
-        server.login(config["smtp"]["user"], config["smtp"]["password"])
-    server.sendmail(
-        config["email"]["from"],
-        [config["email"]["to"]],
-        msg.as_string())
-    server.quit()
-
-
 def send_notification(success):
     import apprise
     logging.info("sending msg")
@@ -156,12 +104,11 @@ def send_notification(success):
     )   
 
 def finish(is_success):
-    if ("error", "success")[is_success] in config["email"]["sendon"]:
+    if ("error", "success")[is_success] in config["notification"]["sendon"]:
         try:
-            send_email(is_success)
             send_notification(is_success)
         except Exception:
-            logging.exception("Failed to send email")
+            logging.exception("Failed to send notification")
     if is_success:
         logging.info("Run finished successfully")
     else:
@@ -173,7 +120,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub", "notification"]
+    sections = ["snapraid", "logging", "scrub", "notification"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -181,7 +128,7 @@ def load_config(args):
 
     int_options = [
         ("snapraid", "deletethreshold"), ("logging", "maxsize"),
-        ("scrub", "percentage"), ("scrub", "older-than"), ("email", "maxsize"),
+        ("scrub", "percentage"), ("scrub", "older-than"),
     ]
     for section, option in int_options:
         try:
@@ -189,10 +136,7 @@ def load_config(args):
         except ValueError:
             config[section][option] = 0
 
-    config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
-    config["smtp"]["tls"] = (config["smtp"]["tls"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
-    config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (
         config["snapraid"]["touch"].lower() == "true")
 
@@ -222,12 +166,12 @@ def setup_logger():
         file_logger.setFormatter(log_format)
         root_logger.addHandler(file_logger)
 
-    if config["email"]["sendon"]:
+    if config["notification"]["sendon"]:
         global email_log
         email_log = StringIO()
         email_logger = logging.StreamHandler(email_log)
         email_logger.setFormatter(log_format)
-        if config["email"]["short"]:
+        if config["notification"]["short"]:
             # Don't send programm stdout in email
             email_logger.setLevel(logging.INFO)
         root_logger.addHandler(email_logger)
