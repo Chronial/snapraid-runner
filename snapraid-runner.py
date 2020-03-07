@@ -125,10 +125,41 @@ def send_email(success):
     server.quit()
 
 
+def send_notification(success):
+    import apprise
+    logging.info("sending msg")
+    # Create an Apprise instance
+    apobj = apprise.Apprise()
+
+    # Create an Config instance
+    apprise_config = apprise.AppriseConfig()
+
+    apprise_config_file = config["notification"]["config"]
+    # Add a configuration source:
+    apprise_config.add(apprise_config_file)
+    # Make sure to add our config into our apprise object
+    apobj.add(apprise_config)
+
+    if success:
+        message_title = "SnapRAID job completed successfully:\n\n\n"
+    else:
+        message_title = "Error during SnapRAID job:\n\n\n"
+  
+    message_body = email_log.getvalue()
+
+    # Then notify these services any time you desire. The below would
+    # notify all of the services that have not been bound to any specific
+    # tag.
+    apobj.notify(
+        body=message_body,
+        title=message_title,
+    )   
+
 def finish(is_success):
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
             send_email(is_success)
+            send_notification(is_success)
         except Exception:
             logging.exception("Failed to send email")
     if is_success:
@@ -142,7 +173,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "notification"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -162,7 +193,8 @@ def load_config(args):
     config["smtp"]["tls"] = (config["smtp"]["tls"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
-    config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["snapraid"]["touch"] = (
+        config["snapraid"]["touch"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
@@ -304,3 +336,4 @@ def run():
 
 
 main()
+
