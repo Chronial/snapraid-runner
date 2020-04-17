@@ -57,7 +57,8 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
         [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        universal_newlines=True
+        universal_newlines=True,
+        encoding="utf-8"
     )
     out = []
     threads = [
