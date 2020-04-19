@@ -57,7 +57,11 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
         [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        universal_newlines=True
+        universal_newlines=True,
+        # Snapraid always outputs utf-8 on windows. On linux, utf-8
+        # also seems a sensible assumption.
+        encoding="utf-8",
+        errors="replace"
     )
     out = []
     threads = [

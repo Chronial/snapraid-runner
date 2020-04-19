@@ -27,6 +27,9 @@ It supports Windows, Linux and macOS and runs on both python2 and python3.
 * Can run `scrub` after `sync`
 
 ## Changelog
+### Unreleased
+* Fix snapraid output encoding handling  (by hyyz17200, PR-31)
+
 ### v0.4 (17 Aug 2019)
 * Add compatibility with python3 (by reed-jones)
 * Add support for running `snapraid touch` (by ShoGinn, PR-11)
