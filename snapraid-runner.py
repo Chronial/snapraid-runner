@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf8 -*-
 from __future__ import division
 
 import argparse
+import configparser
 import logging
 import logging.handlers
 import os.path
@@ -12,13 +12,7 @@ import threading
 import time
 import traceback
 from collections import Counter, defaultdict
-
-if sys.version_info[0] > 2:
-    import configparser
-    from io import StringIO
-else:
-    import ConfigParser as configparser
-    from cStringIO import StringIO
+from io import StringIO
 
 # Global variables
 config = None
