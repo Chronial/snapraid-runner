@@ -6,7 +6,7 @@ via email. All this is configurable.
 It can be run manually, but its main purpose is to be run via cronjob/windows
 scheduler.
 
-It supports Windows, Linux and macOS and runs on both python2 and python3.
+It supports Windows, Linux and macOS and requires at least python3.7.
 
 ## How to use
 * If you don’t already have it, download and install
@@ -27,6 +27,10 @@ It supports Windows, Linux and macOS and runs on both python2 and python3.
 * Can run `scrub` after `sync`
 
 ## Changelog
+### Unreleased
+* Remove (broken) python2 support
+* Fix snapraid output encoding handling  (by hyyz17200, PR-31)
+
 ### v0.4 (17 Aug 2019)
 * Add compatibility with python3 (by reed-jones)
 * Add support for running `snapraid touch` (by ShoGinn, PR-11)
