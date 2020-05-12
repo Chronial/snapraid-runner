@@ -22,7 +22,7 @@ else:
 
 # Global variables
 config = None
-email_log = None
+notification_log = None
 
 
 def tee_log(infile, out_lines, log_level):
@@ -93,7 +93,7 @@ def send_notification(success):
     else:
         message_title = "Error during SnapRAID job:\n\n\n"
   
-    message_body = email_log.getvalue()
+    message_body = notification_log.getvalue()
 
     # Then notify these services any time you desire. The below would
     # notify all of the services that have not been bound to any specific
@@ -167,14 +167,14 @@ def setup_logger():
         root_logger.addHandler(file_logger)
 
     if config["notification"]["sendon"]:
-        global email_log
-        email_log = StringIO()
-        email_logger = logging.StreamHandler(email_log)
-        email_logger.setFormatter(log_format)
+        global notification_log
+        notification_log = StringIO()
+        notification_logger = logging.StreamHandler(notification_log)
+        notification_logger.setFormatter(log_format)
         if config["notification"]["short"]:
             # Don't send programm stdout in email
-            email_logger.setLevel(logging.INFO)
-        root_logger.addHandler(email_logger)
+            notification_logger.setLevel(logging.INFO)
+        root_logger.addHandler(notification_logger)
 
 
 def main():
