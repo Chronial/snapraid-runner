@@ -333,10 +333,7 @@ def run():
         ).format(**diff_results)
     )
 
-    if (
-        config["snapraid"]["deletethreshold"] >= 0
-        and diff_results["remove"] > config["snapraid"]["deletethreshold"]
-    ):
+    if 0 <= config["snapraid"]["deletethreshold"] < diff_results["remove"]:
         logging.error(
             "Deleted files exceed delete threshold of {}, aborting".format(
                 config["snapraid"]["deletethreshold"]
