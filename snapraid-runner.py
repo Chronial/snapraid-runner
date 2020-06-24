@@ -67,7 +67,7 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     for t in threads:
         t.join()
     ret = p.wait()
-    # sleep for a while to make pervent output mixup
+    # sleep for a while to make prevent output mixup
     time.sleep(0.3)
     if ret == 0 or ret in allow_statuscodes:
         return out
