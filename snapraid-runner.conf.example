@@ -15,7 +15,7 @@ file = snapraid.log
 maxsize = 5000
 
 [notifications]
-; set to true to activate
+; if you want notifications to be activated
 on = true
 ; set to false to get full program output via email
 short = true
