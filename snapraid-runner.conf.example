@@ -17,7 +17,7 @@ maxsize = 5000
 [notifications]
 ; if you want notifications to be activated
 on = true
-; set to false to get full program output via email
+; set to false to get full program output via notifications
 short = true
 
 [email]
