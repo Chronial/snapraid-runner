@@ -181,7 +181,15 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "notifications", "email", "smtp", "telegram", "scrub"]
+    sections = [
+        "snapraid",
+        "logging",
+        "notifications",
+        "email",
+        "smtp",
+        "telegram",
+        "scrub",
+    ]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -204,7 +212,9 @@ def load_config(args):
     config["smtp"]["tls"] = config["smtp"]["tls"].lower() == "true"
     config["scrub"]["enabled"] = config["scrub"]["enabled"].lower() == "true"
     config["notifications"]["on"] = config["notifications"]["on"].lower() == "true"
-    config["notifications"]["short"] = config["notifications"]["short"].lower() == "true"
+    config["notifications"]["short"] = (
+        config["notifications"]["short"].lower() == "true"
+    )
     config["snapraid"]["touch"] = config["snapraid"]["touch"].lower() == "true"
 
     if args.scrub is not None:
