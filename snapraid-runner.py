@@ -180,7 +180,7 @@ def setup_logger():
     root_logger.addHandler(console_logger)
 
     if config["logging"]["file"]:
-        max_log_size = min(config["logging"]["maxsize"], 0) * 1024
+        max_log_size = max(config["logging"]["maxsize"], 0) * 1024
         file_logger = logging.handlers.RotatingFileHandler(
             config["logging"]["file"],
             maxBytes=max_log_size,
