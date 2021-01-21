@@ -79,8 +79,9 @@ def send_telegram(success):
     else:
         msg = "Error during SnapRAID job:\n"
 
-    send_text = 'https://api.telegram.org/bot' + config(["telegram"]["bot_token"]) + '/sendMessage?chat_id=' + config(["telegram"]["bot_chatID"]) + '&parse_mode=text='
-    send_text = send_text + msg + log
+    send_text = 'https://api.telegram.org/bot' + config["telegram"]["bot_token"] + '/sendMessage?chat_id=' + config["telegram"]["bot_chatid"] + '&text='
+    
+    send_text = send_text + msg + email_log.getvalue()
 
     response = requests.get(send_text)
 
@@ -136,7 +137,7 @@ def send_email(success):
 
 
 def finish(is_success):
-    if config["snapraid"]["report"] = 'email'
+    if (config["snapraid"]["report"].lower() == "email"):
         if ("error", "success")[is_success] in config["email"]["sendon"]:
             try:
                 send_email(is_success)
@@ -315,5 +316,11 @@ def run():
     logging.info("All done")
     finish(True)
 
+def test_run():
+    logging.info("=" * 60)
+    logging.info("Run started")
+    logging.info("=" * 60)
+    logging.info("All done")
+    finish(True)
 
 main()
