@@ -28,8 +28,8 @@ to =
 maxsize = 500
 
 [telegram]
-bot_token = 1307164393:AAEvw7Oe8hdNlRs3pRDTwfNMGgCHFIOZ1uo
-bot_chatID = 44713803
+bot_token = 
+bot_chatID = 
 
 [smtp]
 host =
