@@ -27,6 +27,10 @@ to =
 ; maximum email size in KiB
 maxsize = 500
 
+[telegram]
+bot_token = 1307164393:AAEvw7Oe8hdNlRs3pRDTwfNMGgCHFIOZ1uo
+bot_chatID = 44713803
+
 [smtp]
 host =
 ; leave empty for default port
