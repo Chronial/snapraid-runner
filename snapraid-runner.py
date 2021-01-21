@@ -136,11 +136,14 @@ def send_email(success):
 
 
 def finish(is_success):
-    if ("error", "success")[is_success] in config["email"]["sendon"]:
-        try:
-            send_email(is_success)
-        except Exception:
-            logging.exception("Failed to send email")
+    if config["snapraid"]["report"] = 'email'
+        if ("error", "success")[is_success] in config["email"]["sendon"]:
+            try:
+                send_email(is_success)
+            except Exception:
+                logging.exception("Failed to send email")
+    else:
+        send_telegram(is_success)
     if is_success:
         logging.info("Run finished successfully")
     else:
