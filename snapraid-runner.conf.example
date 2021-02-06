@@ -5,6 +5,8 @@ executable = snapraid
 config = snapraid.conf
 ; abort operation if there are more deletes than this, set to -1 to disable
 deletethreshold = 40
+; abort operation if there are more updates than this, set to -1 to disable
+updatethreshold = 100
 ; if you want touch to be ran each time
 touch = false
 

@@ -147,7 +147,7 @@ def load_config(args):
             config[section][k] = v.strip()
 
     int_options = [
-        ("snapraid", "deletethreshold"), ("logging", "maxsize"),
+        ("snapraid", "deletethreshold"), ("snapraid", "updatethreshold"), ("logging", "maxsize"),
         ("scrub", "percentage"), ("scrub", "older-than"), ("email", "maxsize"),
     ]
     for section, option in int_options:
@@ -271,6 +271,13 @@ def run():
         logging.error(
             "Deleted files exceed delete threshold of {}, aborting".format(
                 config["snapraid"]["deletethreshold"]))
+        finish(False)
+
+    if (config["snapraid"]["updatethreshold"] >= 0 and
+            diff_results["update"] > config["snapraid"]["updatethreshold"]):
+        logging.error(
+            "Updated files exceed update threshold of {}, aborting".format(
+                config["snapraid"]["updatethreshold"]))
         finish(False)
 
     if (diff_results["remove"] + diff_results["add"] + diff_results["move"] +

@@ -20,8 +20,8 @@ It supports Windows, Linux and macOS and requires at least python3.7.
  `py -3 snapraid-runner.py` on Windows.
 
 ## Features
-* Runs `diff` before `sync` to see how many files were deleted and aborts if
-  that number exceeds a set threshold.
+* Runs `diff` before `sync` to see how many files were deleted or updated and aborts if
+  those numbers exceed set thresholds.
 * Can create a size-limited rotated logfile.
 * Can send notification emails after each run or only for failures.
 * Can run `scrub` after `sync`
