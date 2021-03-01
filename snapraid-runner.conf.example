@@ -8,6 +8,15 @@ deletethreshold = 40
 ; if you want touch to be ran each time
 touch = false
 
+[wait]
+enabled = false
+delay = 60
+maxdelays = 9
+
+[waitfiles]
+file-1 = wait-for.file
+file-2 = also-wait-for.file
+
 [logging]
 ; logfile to write to, leave empty to disable
 file = snapraid.log

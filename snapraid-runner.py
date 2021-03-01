@@ -140,7 +140,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "wait", "waitfiles"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -148,6 +148,7 @@ def load_config(args):
 
     int_options = [
         ("snapraid", "deletethreshold"), ("logging", "maxsize"),
+        ("wait", "delay"), ("wait", "maxdelays"),
         ("scrub", "percentage"), ("scrub", "older-than"), ("email", "maxsize"),
     ]
     for section, option in int_options:
@@ -161,9 +162,13 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["wait"]["enabled"] = (config["wait"]["enabled"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
+
+    if args.ignorediff is not None:
+        config["snapraid"]["deletethreshold"] = -1
 
 
 def setup_logger():
@@ -208,6 +213,9 @@ def main():
     parser.add_argument("--no-scrub", action='store_false',
                         dest='scrub', default=None,
                         help="Do not scrub (overrides config)")
+    parser.add_argument("--ignore-diff-threshold", action='store_true',
+                        dest='ignorediff', default=None,
+                        help="Sync if diff threshold exceeded (overrides config)")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
@@ -250,6 +258,25 @@ def run():
         logging.error("Snapraid config does not exist at " +
                       config["snapraid"]["config"])
         finish(False)
+
+    if config["wait"]["enabled"]:
+        wait_delays = 0
+
+        while wait_delays <= config["wait"]["maxdelays"]:
+            wait = False
+            for key, path in config["waitfiles"].items():
+                if os.path.isfile(path):
+                    logging.info("Waiting for {}...".format(key))
+                    
+                    time.sleep(config["wait"]["delay"])
+                    wait_delays += 1
+                    wait = True
+                    break
+            if not wait:
+                break
+        else:
+            logging.error("Timed out waiting for {}".format(key))
+            finish(False);
 
     if config["snapraid"]["touch"]:
         logging.info("Running touch...")
