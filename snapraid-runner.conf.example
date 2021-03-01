@@ -14,11 +14,15 @@ file = snapraid.log
 ; maximum logfile size in KiB, leave empty for infinite
 maxsize = 5000
 
+[notifications]
+; if you want notifications to be activated
+on = true
+; set to false to get full program output via notifications
+short = true
+
 [email]
 ; when to send an email, comma-separated list of [success, error]
 sendon = success,error
-; set to false to get full programm output via email
-short = true
 subject = [SnapRAID] Status Report:
 from =
 to =
@@ -34,6 +38,14 @@ ssl = false
 tls = false
 user =
 password =
+
+[telegram]
+; when to send a message, comma-separated list of [success, error]
+sendon = success,error
+; Telegram bot token
+token = 
+; chat_id for telegram bot
+chat_id = 
 
 [scrub]
 ; set to true to run scrub after sync

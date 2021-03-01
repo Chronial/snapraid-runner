@@ -23,7 +23,7 @@ It supports Windows, Linux and macOS and requires at least python3.7.
 * Runs `diff` before `sync` to see how many files were deleted and aborts if
   that number exceeds a set threshold.
 * Can create a size-limited rotated logfile.
-* Can send notification emails after each run or only for failures.
+* Can send notification via email or telegram after each run or only for failures.
 * Can run `scrub` after `sync`
 
 ## Scope of this project and contributions
