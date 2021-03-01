@@ -39,11 +39,13 @@ def tee_log(infile, out_lines, log_level):
     return t
 
 
-def snapraid_command(command, args={}, *, allow_statuscodes=[]):
+def snapraid_command(command, args={}, *, allow_statuscodes=[], log_output = False):
     """
     Run snapraid command
     Raises subprocess.CalledProcessError if errorlevel != 0
     """
+    stdout_level = logging.INFO if log_output else logging.OUTPUT
+    stderr_level = logging.ERROR if log_output else logging.OUTERR
     arguments = ["--conf", config["snapraid"]["config"]]
     for (k, v) in args.items():
         arguments.extend(["--" + k, str(v)])
@@ -59,8 +61,8 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     )
     out = []
     threads = [
-        tee_log(p.stdout, out, logging.OUTPUT),
-        tee_log(p.stderr, [], logging.OUTERR)]
+        tee_log(p.stdout, out, stdout_level),
+        tee_log(p.stderr, [], stderr_level)]
     for t in threads:
         t.join()
     ret = p.wait()
@@ -161,6 +163,7 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["snapraid"]["smart"] = (config["snapraid"]["smart"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
@@ -254,6 +257,14 @@ def run():
     if config["snapraid"]["touch"]:
         logging.info("Running touch...")
         snapraid_command("touch")
+        logging.info("*" * 60)
+    if config["snapraid"]["smart"]:
+        logging.info("Running smart...")
+        try:
+            snapraid_command("smart", log_output=True)
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            finish(False)
         logging.info("*" * 60)
 
     logging.info("Running diff...")

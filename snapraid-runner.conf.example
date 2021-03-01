@@ -7,6 +7,8 @@ config = snapraid.conf
 deletethreshold = 40
 ; if you want touch to be ran each time
 touch = false
+; prints a SMART report of all the disks of the array.
+smart = true
 
 [logging]
 ; logfile to write to, leave empty to disable
