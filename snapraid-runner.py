@@ -6,6 +6,7 @@ import configparser
 import logging
 import logging.handlers
 import os.path
+import re
 import subprocess
 import sys
 import threading
@@ -123,7 +124,49 @@ def send_email(success):
     server.quit()
 
 
+def get_parity_disks(snapraid_config):
+    disks = set()
+    with open(snapraid_config) as _fh:
+        for line in _fh:
+            if line.startswith('parity'):
+                for parity in line.strip().split(None, 1)[-1].split(','):
+                    try:
+                        diskfree = subprocess.check_output(
+                            ["df", parity], stderr=subprocess.DEVNULL)
+                    except subprocess.CalledProcessError as e:
+                        logging.error("Failed to find mount for %s: %s", parity, e)
+                        continue
+                    partition = diskfree.decode('utf8').splitlines()[-1].split()[0]
+                    disk = re.sub(r'\d+', '', partition)
+                    disks.add(disk)
+    return disks
+
+def spindown():
+    if sys.platform in ("darwin", "win32"):
+        logging.error("Spindown is not supported on %s", sys.platform)
+        return False
+    logging.info("Running spindown...")
+    try:
+        subprocess.run(["sync"], check=True)
+    except subprocess.CalledProcessError as e:
+        logging.error(e)
+    parity_disks = get_parity_disks(config["snapraid"]["config"])
+    passed = bool(parity_disks)
+    for disk in sorted(parity_disks):
+        logging.info("Running spindown on %s", disk)
+        try:
+            subprocess.run(["hdparm", "-y", disk], check=True)
+        except subprocess.CalledProcessError as e:
+            logging.error(e)
+            passed = False
+    logging.info("*" * 60)
+    return passed
+
+
 def finish(is_success):
+    if config["snapraid"]["spindown"]:
+        if not spindown():
+            is_success = False
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
             send_email(is_success)
@@ -161,6 +204,7 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["snapraid"]["spindown"] = (config["snapraid"]["spindown"].lower() == "true")
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
