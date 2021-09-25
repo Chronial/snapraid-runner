@@ -148,7 +148,7 @@ def load_config(args):
 
     int_options = [
         ("snapraid", "deletethreshold"), ("logging", "maxsize"),
-        ("scrub", "percentage"), ("scrub", "older-than"), ("email", "maxsize"),
+        ("scrub", "older-than"), ("email", "maxsize"),
     ]
     for section, option in int_options:
         try:
@@ -161,6 +161,10 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+
+    # Migration
+    if config["scrub"]["percentage"]:
+        config["scrub"]["plan"] = config["scrub"]["percentage"]
 
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
@@ -295,7 +299,7 @@ def run():
         logging.info("Running scrub...")
         try:
             snapraid_command("scrub", {
-                "percentage": config["scrub"]["percentage"],
+                "plan": config["scrub"]["plan"],
                 "older-than": config["scrub"]["older-than"],
             })
         except subprocess.CalledProcessError as e:
