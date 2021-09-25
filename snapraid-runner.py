@@ -167,7 +167,7 @@ def load_config(args):
     if args.scrub is not None:
         config["scrub"]["enabled"] = args.scrub
 
-    if args.ignorediff is not None:
+    if args.ignore_deletethreshold:
         config["snapraid"]["deletethreshold"] = -1
 
 
@@ -213,9 +213,8 @@ def main():
     parser.add_argument("--no-scrub", action='store_false',
                         dest='scrub', default=None,
                         help="Do not scrub (overrides config)")
-    parser.add_argument("--ignore-diff-threshold", action='store_true',
-                        dest='ignorediff', default=None,
-                        help="Sync if diff threshold exceeded (overrides config)")
+    parser.add_argument("--ignore-deletethreshold", action='store_true',
+                        help="Sync even if configured delete threshold is exceeded")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
@@ -279,6 +278,7 @@ def run():
         logging.error(
             "Deleted files exceed delete threshold of {}, aborting".format(
                 config["snapraid"]["deletethreshold"]))
+        logging.error("Run again with --ignore-deletethreshold to sync anyways")
         finish(False)
 
     if (diff_results["remove"] + diff_results["add"] + diff_results["move"] +
