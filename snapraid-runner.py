@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# -*- coding: utf8 -*-
 from __future__ import division
 
 import argparse
+import configparser
 import logging
 import logging.handlers
 import os.path
@@ -12,13 +12,7 @@ import threading
 import time
 import traceback
 from collections import Counter, defaultdict
-
-if sys.version_info[0] > 2:
-    import configparser
-    from io import StringIO
-else:
-    import ConfigParser as configparser
-    from cStringIO import StringIO
+from io import StringIO
 
 # Global variables
 config = None
@@ -57,7 +51,11 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
         [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        universal_newlines=True
+        universal_newlines=True,
+        # Snapraid always outputs utf-8 on windows. On linux, utf-8
+        # also seems a sensible assumption.
+        encoding="utf-8",
+        errors="replace"
     )
     out = []
     threads = [
@@ -185,7 +183,7 @@ def setup_logger():
     root_logger.addHandler(console_logger)
 
     if config["logging"]["file"]:
-        max_log_size = min(config["logging"]["maxsize"], 0) * 1024
+        max_log_size = max(config["logging"]["maxsize"], 0) * 1024
         file_logger = logging.handlers.RotatingFileHandler(
             config["logging"]["file"],
             maxBytes=max_log_size,
