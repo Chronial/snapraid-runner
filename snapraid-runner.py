@@ -26,11 +26,7 @@ def tee_log(infile, out_lines, log_level):
     """
     def tee_thread():
         for line in iter(infile.readline, ""):
-            line = line.strip()
-            # Do not log the progress display
-            if "\r" in line:
-                line = line.split("\r")[-1]
-            logging.log(log_level, line.strip())
+            logging.log(log_level, line.rstrip())
             out_lines.append(line)
         infile.close()
     t = threading.Thread(target=tee_thread)
@@ -44,19 +40,18 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     Run snapraid command
     Raises subprocess.CalledProcessError if errorlevel != 0
     """
-    arguments = ["--conf", config["snapraid"]["config"]]
+    arguments = ["--conf", config["snapraid"]["config"],
+                 "--quiet"]
     for (k, v) in args.items():
         arguments.extend(["--" + k, str(v)])
     p = subprocess.Popen(
         [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        universal_newlines=True,
         # Snapraid always outputs utf-8 on windows. On linux, utf-8
         # also seems a sensible assumption.
         encoding="utf-8",
-        errors="replace"
-    )
+        errors="replace")
     out = []
     threads = [
         tee_log(p.stdout, out, logging.OUTPUT),

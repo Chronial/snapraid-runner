@@ -40,6 +40,8 @@ feature you are missing, you can have a look
 ### Unreleased
 * Add --ignore-deletethreshold (by exterrestris, #25)
 * Add support for scrub --plan, replacing --percentage
+* Remove snapraid progress output. Was accidentially introduced with python3
+  support.
 
 ### v0.5 (26 Feb 2021)
 * Remove (broken) python2 support
