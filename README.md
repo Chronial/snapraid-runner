@@ -37,6 +37,9 @@ feature you are missing, you can have a look
 [at the open PRs](https://github.com/Chronial/snapraid-runner/pulls).
 
 ## Changelog
+### Unreleased
+* Add --ignore-deletethreshold (by exterrestris, #25)
+
 ### v0.5 (26 Feb 2021)
 * Remove (broken) python2 support
 * Fix snapraid output encoding handling  (by hyyz17200, #31)
