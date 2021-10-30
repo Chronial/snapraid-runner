@@ -291,10 +291,17 @@ def run():
     if config["scrub"]["enabled"]:
         logging.info("Running scrub...")
         try:
-            snapraid_command("scrub", {
+            # Check if a percentage plan was given
+            int(config["scrub"]["plan"])
+        except ValueError:
+            scrub_args = {"plan": config["scrub"]["plan"]}
+        else:
+            scrub_args = {
                 "plan": config["scrub"]["plan"],
                 "older-than": config["scrub"]["older-than"],
-            })
+            }
+        try:
+            snapraid_command("scrub", scrub_args)
         except subprocess.CalledProcessError as e:
             logging.error(e)
             finish(False)

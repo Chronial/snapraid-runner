@@ -40,4 +40,5 @@ password =
 enabled = false
 ; scrub plan - either a percentage or one of [bad, new, full]
 plan = 12
+; minimum block age (in days) for scrubbing. Only used with percentage plans
 older-than = 10

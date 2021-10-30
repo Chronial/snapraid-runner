@@ -39,13 +39,13 @@ feature you are missing, you can have a look
 ## Changelog
 ### Unreleased
 * Add --ignore-deletethreshold (by exterrestris, #25)
-* Add support for scrub --plan, replacing --percentage
+* Add support for scrub --plan, replacing --percentage (thanks to fmoledina)
 * Remove snapraid progress output. Was accidentially introduced with python3
   support.
 
 ### v0.5 (26 Feb 2021)
 * Remove (broken) python2 support
-* Fix snapraid output encoding handling  (by hyyz17200, #31)
+* Fix snapraid output encoding handling (by hyyz17200, #31)
 * Fix log rotation (by ptoulouse, #36)
 
 ### v0.4 (17 Aug 2019)
