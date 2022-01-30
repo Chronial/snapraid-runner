@@ -280,7 +280,8 @@ class SnapraidRunner:
         self.finish(True)
 
     def finish(self, is_success):
-        if ('error', 'success')[is_success] in self.email_sendon:
+        status = ('error', 'success')[is_success]
+        if self.email_sendon is not None and status in self.email_sendon:
             try:
                 self.send_email(is_success)
             except Exception:
