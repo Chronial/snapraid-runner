@@ -77,7 +77,7 @@ def send_email(success):
 
     # use quoted-printable instead of the default base64
     charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
-    body = get_body(success, email_log)
+    body = get_email_body(success)
 
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = config["email"]["subject"] + \
@@ -108,7 +108,7 @@ def send_pushover_notification(success):
         logging.error("Failed to send pushover notification. Token or user is missing")
         return
 
-    body = get_body(success, notification_log)
+    body = get_notification_body(success)
 
     conn = http.client.HTTPSConnection("api.pushover.net")
     conn.request("POST", "/1/messages.json",
@@ -121,14 +121,31 @@ def send_pushover_notification(success):
     if response.status != 200:
         raise Exception('Error sending notification')
     else:
-        print("Sending complete")
+        logging.info("Sending complete")
 
-def get_body(success, log_type):
+def get_notification_body(success):
+    if success:
+        body = "SnapRAID job completed successfully:\n"
+    else:
+        body = "Error during SnapRAID job:\n"
+    log = notification_log.getvalue()
+    maxsize = config['pushover'].get('maxsize', 1024)
+    if maxsize and len(log) > maxsize:
+        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
+        log = (
+                log[:maxsize // 2] +
+                "[...]".format(
+                    cut_lines) +
+                log[-maxsize // 2:])
+    body += log
+    return body
+
+def get_email_body(success):
     if success:
         body = "SnapRAID job completed successfully:\n\n\n"
     else:
         body = "Error during SnapRAID job:\n\n\n"
-    log = log_type.getvalue()
+    log = email_log.getvalue()
     maxsize = config['email'].get('maxsize', 500) * 1024
     if maxsize and len(log) > maxsize:
         cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
@@ -174,7 +191,7 @@ def load_config(args):
 
     int_options = [
         ("snapraid", "deletethreshold"), ("logging", "maxsize"),
-        ("scrub", "older-than"), ("email", "maxsize"),
+        ("scrub", "older-than"), ("email", "maxsize"), ("pushover", "maxsize"),
     ]
     for section, option in int_options:
         try:
@@ -202,6 +219,9 @@ def load_config(args):
 def setup_logger():
     log_format = logging.Formatter(
         "%(asctime)s [%(levelname)-6.6s] %(message)s")
+
+    log_format_notification = logging.Formatter(
+        "%(message)s")
     root_logger = logging.getLogger()
     logging.OUTPUT = 15
     logging.addLevelName(logging.OUTPUT, "OUTPUT")
@@ -235,7 +255,8 @@ def setup_logger():
         global notification_log
         notification_log = StringIO()
         notification_logger = logging.StreamHandler(notification_log)
-        notification_logger.setFormatter(log_format)
+        notification_logger.setFormatter(log_format_notification)
+        notification_logger.setLevel(logging.INFO)
 
         root_logger.addHandler(notification_logger)
 

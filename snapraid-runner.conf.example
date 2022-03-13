@@ -47,3 +47,4 @@ older-than = 10
 ; sendon = success,error
 token =
 user =
+maxsize = 1024
