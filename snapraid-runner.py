@@ -69,7 +69,7 @@ def send_email(success):
     from email.mime.text import MIMEText
     from email import charset
     
-    if len(config["smtp"]["host"]) == 0 and not config["email"]["use_oauth"]:
+    if len(config["smtp"]["host"]) == 0 and not config["email"]["use_yagmail"]:
         logging.error("Failed to send email because smtp host is not set")
         return
 
@@ -98,14 +98,14 @@ def send_email(success):
     msg["From"] = config["email"]["from"]
     msg["To"] = config["email"]["to"]
 
-    if config["email"]["use_oauth"]:
+    if config["email"]["use_yagmail"]:
         import yagmail
 
         attachment_path = []
-        if config["oauth"]["send_log_on_error"] and not success:
+        if config["yagmail"]["send_log_on_error"] and not success:
             attachment_path = config["logging"]["file"]
         
-        yag = yagmail.SMTP(msg["From"], oauth2_file=config["oauth"]["oauth2_file"])
+        yag = yagmail.SMTP(msg["From"], oauth2_file=config["yagmail"]["oauth2_file"])
         yag.send(to=msg["To"], subject=msg["Subject"], contents=body, attachments=attachment_path)
     else:
         import smtplib
@@ -145,7 +145,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "oauth", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "yagmail", "smtp", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):

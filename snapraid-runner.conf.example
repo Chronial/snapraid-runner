@@ -19,7 +19,7 @@ maxsize = 5000
 
 [email]
 ;set true to use yagmail's oauth2 for gmail insead of smtp for sending the email
-use_oauth = true
+use_yagmail = true
 ; when to send an email, comma-separated list of [success, error]
 sendon = success,error
 ; set to false to get full programm output via email
@@ -30,7 +30,7 @@ to =
 ; maximum email size in KiB
 maxsize = 500
 
-[oauth]
+[yagmail]
 ; for use only if use_oauth = true, sets the oauth2 credentials file
 ; location, if no file exists then one will be created when the program is ran
 oauth2_file = oauth2_creds.json
