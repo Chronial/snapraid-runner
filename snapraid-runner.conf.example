@@ -37,7 +37,7 @@ oauth2_file = oauth2_creds.json
 ;set true to attach the log file to email
 send_log = false
 ;set true to attach the log file to email only if there is an error
-send_log_only_on_error = false
+iff_error = false
 
 [smtp]
 host =

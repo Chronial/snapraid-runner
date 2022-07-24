@@ -102,7 +102,7 @@ def send_email(success):
         import yagmail
 
         attachment_path = []
-        if config["yagmail"]["send_log_on_error"] and not success:
+        if config["yagmail"]["send_log"] and not (config["yagmail"]["iff_error"] and success):
             attachment_path = config["logging"]["file"]
         
         yag = yagmail.SMTP(msg["From"], oauth2_file=config["yagmail"]["oauth2_file"])
@@ -159,13 +159,15 @@ def load_config(args):
         try:
             config[section][option] = int(config[section][option])
         except ValueError:
-            config[section][option] = 0
-
+            config[section][option] = 0    
+    
+    config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["email"]["short"] = (config["email"]["short"].lower() == "true")
+    config["yagmail"]["send_log"] = (config["yagmail"]["send_log"].lower() == "true")
+    config["yagmail"]["iff_error"] = (config["yagmail"]["iff_error"].lower() == "true")
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["smtp"]["tls"] = (config["smtp"]["tls"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
-    config["email"]["short"] = (config["email"]["short"].lower() == "true")
-    config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
 
     # Migration
     if config["scrub"]["percentage"]:
