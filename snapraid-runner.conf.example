@@ -34,8 +34,10 @@ maxsize = 500
 ; for use only if use_oauth = true, sets the oauth2 credentials file
 ; location, if no file exists then one will be created when the program is ran
 oauth2_file = oauth2_creds.json
-;set true to attach the log file to email if there is an error
-send_log_on_error = false
+;set true to attach the log file to email
+send_log = false
+;set true to attach the log file to email only if there is an error
+send_log_only_on_error = false
 
 [smtp]
 host =
