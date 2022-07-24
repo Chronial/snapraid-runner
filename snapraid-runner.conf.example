@@ -1,12 +1,15 @@
 [snapraid]
 ; path to the snapraid executable (e.g. /bin/snapraid)
-executable = snapraid
+executable = snapraid.exe
 ; path to the snapraid config to be used
 config = snapraid.conf
 ; abort operation if there are more deletes than this, set to -1 to disable
 deletethreshold = 40
+; abort operation if there are more modify's than this, set to -1 to disable, for rudimenary 
+; ransomware protection
+modifythreshold = 1
 ; if you want touch to be ran each time
-touch = false
+touch = true
 
 [logging]
 ; logfile to write to, leave empty to disable
@@ -15,15 +18,22 @@ file = snapraid.log
 maxsize = 5000
 
 [email]
+;set true to use yagmail's oauth2 for gmail insead of smtp for sending the email
+use_oauth = true
 ; when to send an email, comma-separated list of [success, error]
 sendon = success,error
 ; set to false to get full programm output via email
 short = true
 subject = [SnapRAID] Status Report:
-from =
-to =
+from = 
+to = 
 ; maximum email size in KiB
 maxsize = 500
+
+[oauth]
+; for use only if use_oauth = true, sets the oauth2 credentials file
+; location, if no file exists then one will be created when the program is ran
+oauth2_file = oauth2_creds.json
 
 [smtp]
 host =
