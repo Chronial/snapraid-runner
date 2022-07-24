@@ -101,8 +101,12 @@ def send_email(success):
     if config["email"]["use_oauth"]:
         import yagmail
 
+        attachment_path = []
+        if config["oauth"]["send_log_on_error"] and not success:
+            attachment_path = config["logging"]["file"]
+        
         yag = yagmail.SMTP(msg["From"], oauth2_file=config["oauth"]["oauth2_file"])
-        yag.send(to=msg["To"], subject=msg["Subject"], contents=body)
+        yag.send(to=msg["To"], subject=msg["Subject"], contents=body, attachments=attachment_path)
     else:
         import smtplib
         
