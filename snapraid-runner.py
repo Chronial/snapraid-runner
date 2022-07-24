@@ -140,8 +140,8 @@ def load_config(args):
             config[section][k] = v.strip()
 
     int_options = [
-        ("snapraid", "deletethreshold"), ("logging", "maxsize"),
-        ("scrub", "older-than"), ("email", "maxsize"),
+        ("snapraid", "deletethreshold"), ("snapraid", "modifythreshold"), 
+        ("logging", "maxsize"), ("scrub", "older-than"), ("email", "maxsize"),
     ]
     for section, option in int_options:
         try:
