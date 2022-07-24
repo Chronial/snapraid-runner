@@ -281,6 +281,14 @@ def run():
         logging.error("Run again with --ignore-deletethreshold to sync anyways")
         finish(False)
 
+    if (config["snapraid"]["modifythreshold"] >= 0 and
+            diff_results["update"] > config["snapraid"]["modifythreshold"]):
+        logging.error(
+            "Modified files exceed modify threshold of {}, aborting".format(
+                config["snapraid"]["modifythreshold"]))
+        logging.error("Run again with --ignore-modifythreshold to sync anyways")
+        finish(False)
+
     if (diff_results["remove"] + diff_results["add"] + diff_results["move"] +
             diff_results["update"] == 0):
         logging.info("No changes detected, no sync required")
