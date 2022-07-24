@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import yagmail
 import argparse
 import configparser
 import logging
@@ -67,11 +66,10 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
 
 
 def send_email(success):
-    import smtplib
     from email.mime.text import MIMEText
     from email import charset
-
-    if len(config["smtp"]["host"]) == 0:
+    
+    if len(config["smtp"]["host"]) == 0 and not config["email"]["use_oauth"]:
         logging.error("Failed to send email because smtp host is not set")
         return
 
@@ -99,22 +97,31 @@ def send_email(success):
         (" SUCCESS" if success else " ERROR")
     msg["From"] = config["email"]["from"]
     msg["To"] = config["email"]["to"]
-    smtp = {"host": config["smtp"]["host"]}
-    if config["smtp"]["port"]:
-        smtp["port"] = config["smtp"]["port"]
-    if config["smtp"]["ssl"]:
-        server = smtplib.SMTP_SSL(**smtp)
+
+    if config["email"]["use_oauth"]:
+        import yagmail
+
+        yag = yagmail.SMTP(msg["From"], oauth2_file=config["oauth"]["oauth2_file"])
+        yag.send(to=msg["To"], subject=msg["Subject"], contents=body)
     else:
-        server = smtplib.SMTP(**smtp)
-        if config["smtp"]["tls"]:
-            server.starttls()
-    if config["smtp"]["user"]:
-        server.login(config["smtp"]["user"], config["smtp"]["password"])
-    server.sendmail(
-        config["email"]["from"],
-        [config["email"]["to"]],
-        msg.as_string())
-    server.quit()
+        import smtplib
+        
+        smtp = {"host": config["smtp"]["host"]}
+        if config["smtp"]["port"]:
+            smtp["port"] = config["smtp"]["port"]
+        if config["smtp"]["ssl"]:
+            server = smtplib.SMTP_SSL(**smtp)
+        else:
+            server = smtplib.SMTP(**smtp)
+            if config["smtp"]["tls"]:
+                server.starttls()
+        if config["smtp"]["user"]:
+            server.login(config["smtp"]["user"], config["smtp"]["password"])
+        server.sendmail(
+            config["email"]["from"],
+            [config["email"]["to"]],
+            msg.as_string())
+        server.quit()
 
 
 def finish(is_success):
