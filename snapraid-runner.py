@@ -165,6 +165,9 @@ def load_config(args):
     if args.ignore_deletethreshold:
         config["snapraid"]["deletethreshold"] = -1
 
+    if args.ignore_modifythreshold:
+        config["snapraid"]["modifythreshold"] = -1
+
 
 def setup_logger():
     log_format = logging.Formatter(
@@ -210,6 +213,8 @@ def main():
                         help="Do not scrub (overrides config)")
     parser.add_argument("--ignore-deletethreshold", action='store_true',
                         help="Sync even if configured delete threshold is exceeded")
+    parser.add_argument("--ignore-modifythreshold", action='store_true',
+                        help="Sync even if configured modify threshold is exceeded")
     args = parser.parse_args()
 
     if not os.path.exists(args.conf):
