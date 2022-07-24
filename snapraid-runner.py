@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import yagmail
 import argparse
 import configparser
 import logging
