@@ -25,6 +25,15 @@ to =
 ; maximum email size in KiB
 maxsize = 500
 
+[gotify]
+; when to send a gotify notification, comma-separated list of [success, error]
+sendon = success,error
+; url of the gotify server without trailing slash
+url = https://gotify.server.com
+; Gotify token
+token =
+
+
 [smtp]
 host =
 ; leave empty for default port
