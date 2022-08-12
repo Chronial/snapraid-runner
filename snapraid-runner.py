@@ -133,7 +133,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "sync"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -154,6 +154,7 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["sync"]["force-zero"] = (config["sync"]["force-zero"].lower() == "true")
 
     # Migration
     if config["scrub"]["percentage"]:
@@ -281,8 +282,11 @@ def run():
         logging.info("No changes detected, no sync required")
     else:
         logging.info("Running sync...")
+        sync_args: dict[str, str] = {}
+        if config["sync"]["force-zero"]:
+            sync_args["force-zero"] = ""
         try:
-            snapraid_command("sync")
+            snapraid_command("sync", sync_args)
         except subprocess.CalledProcessError as e:
             logging.error(e)
             finish(False)
