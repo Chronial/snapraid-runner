@@ -41,7 +41,9 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     arguments = ["--conf", config["snapraid"]["config"],
                  "--quiet"]
     for (k, v) in args.items():
-        arguments.extend(["--" + k, str(v)])
+        arguments.append("--" + k)
+        if v != '':
+            arguments.append(str(v))
     p = subprocess.Popen(
         [config["snapraid"]["executable"], command] + arguments,
         stdout=subprocess.PIPE,
