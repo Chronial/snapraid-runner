@@ -16,6 +16,8 @@ It supports Windows, Linux and macOS and requires at least python3.7.
 * Copy/rename the `snapraid-runner.conf.example` to `snapraid-runner.conf` and
   edit its contents. You need to at least configure `snapraid.executable` and
   `snapraid.config`.
+  * [The wiki](https://github.com/Chronial/snapraid-runner/wiki/How-to-use-snapraid-runner-with-gmail)
+    has details on how to use gmail for sending mail.
 * Run the script via `python3 snapraid-runner.py` on Linux or
  `py -3 snapraid-runner.py` on Windows.
 
