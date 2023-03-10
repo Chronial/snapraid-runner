@@ -9,6 +9,7 @@ import sys
 import threading
 import time
 import traceback
+import requests
 from collections import Counter, defaultdict
 from io import StringIO
 
@@ -63,6 +64,21 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
         return out
     else:
         raise subprocess.CalledProcessError(ret, "snapraid " + command)
+
+def send_gotify(success):
+
+    if success:
+        requests.post("{}/message?token={}".format(config["gotify"]["url"], config["gotify"]["token"]), json={
+            "message": "Success",
+            "priority": 2,
+            "title": "SnapRAID"
+        })
+    else:
+        requests.post("{}/message?token={}".format(config["gotify"]["url"], config["gotify"]["token"]), json={
+            "message": "Failed",
+            "priority": 2,
+            "title": "SnapRAID"
+        })
 
 
 def send_email(success):
@@ -122,6 +138,11 @@ def finish(is_success):
             send_email(is_success)
         except Exception:
             logging.exception("Failed to send email")
+    if ("error", "success")[is_success] in config["gotify"]["sendon"]:
+        try:
+            send_gotify(is_success)
+        except Exception:
+            logging.exception("Failed to send gotify notification")
     if is_success:
         logging.info("Run finished successfully")
     else:
@@ -133,7 +154,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "gotify", "smtp", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
