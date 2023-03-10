@@ -42,3 +42,7 @@ enabled = false
 plan = 12
 ; minimum block age (in days) for scrubbing. Only used with percentage plans
 older-than = 10
+
+[sync]
+; set to true to force sync files with zero size
+force-zero = false
