@@ -9,13 +9,14 @@ import sys
 import threading
 import time
 import traceback
+import http.client, urllib
 from collections import Counter, defaultdict
 from io import StringIO
 
 # Global variables
 config = None
 email_log = None
-
+notification_log = None
 
 def tee_log(infile, out_lines, log_level):
     """
@@ -76,22 +77,7 @@ def send_email(success):
 
     # use quoted-printable instead of the default base64
     charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
-    if success:
-        body = "SnapRAID job completed successfully:\n\n\n"
-    else:
-        body = "Error during SnapRAID job:\n\n\n"
-
-    log = email_log.getvalue()
-    maxsize = config['email'].get('maxsize', 500) * 1024
-    if maxsize and len(log) > maxsize:
-        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
-        log = (
-            "NOTE: Log was too big for email and was shortened\n\n" +
-            log[:maxsize // 2] +
-            "[...]\n\n\n --- LOG WAS TOO BIG - {} LINES REMOVED --\n\n\n[...]".format(
-                cut_lines) +
-            log[-maxsize // 2:])
-    body += log
+    body = get_email_body(success)
 
     msg = MIMEText(body, "plain", "utf-8")
     msg["Subject"] = config["email"]["subject"] + \
@@ -116,12 +102,76 @@ def send_email(success):
     server.quit()
 
 
+def send_pushover_notification(success):
+
+    if len(config["pushover"]["token"]) == 0 or len(config["pushover"]["user"]) == 0:
+        logging.error("Failed to send pushover notification. Token or user is missing")
+        return
+
+    body = get_notification_body(success)
+
+    conn = http.client.HTTPSConnection("api.pushover.net")
+    conn.request("POST", "/1/messages.json",
+                 urllib.parse.urlencode({
+                     "token": config["pushover"]["token"],
+                     "user": config["pushover"]["user"],
+                     "message": body,
+                 }), {"Content-type": "application/x-www-form-urlencoded"})
+    response = conn.getresponse()
+    if response.status != 200:
+        raise Exception('Error sending notification')
+    else:
+        logging.info("Sending complete")
+
+def get_notification_body(success):
+    if success:
+        body = "SnapRAID job completed successfully:\n"
+    else:
+        body = "Error during SnapRAID job:\n"
+    log = notification_log.getvalue()
+    maxsize = config['pushover'].get('maxsize', 1024)
+    if maxsize and len(log) > maxsize:
+        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
+        log = (
+                log[:maxsize // 2] +
+                "[...]".format(
+                    cut_lines) +
+                log[-maxsize // 2:])
+    body += log
+    return body
+
+def get_email_body(success):
+    if success:
+        body = "SnapRAID job completed successfully:\n\n\n"
+    else:
+        body = "Error during SnapRAID job:\n\n\n"
+    log = email_log.getvalue()
+    maxsize = config['email'].get('maxsize', 500) * 1024
+    if maxsize and len(log) > maxsize:
+        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
+        log = (
+                "NOTE: Log was too big for email and was shortened\n\n" +
+                log[:maxsize // 2] +
+                "[...]\n\n\n --- LOG WAS TOO BIG - {} LINES REMOVED --\n\n\n[...]".format(
+                    cut_lines) +
+                log[-maxsize // 2:])
+    body += log
+    return body
+
+
 def finish(is_success):
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
             send_email(is_success)
         except Exception:
             logging.exception("Failed to send email")
+
+    if ("error", "success")[is_success] in config["pushover"]["sendon"]:
+        try:
+            send_pushover_notification(is_success)
+        except Exception:
+            logging.exception("Failed to send email")
+
     if is_success:
         logging.info("Run finished successfully")
     else:
@@ -133,7 +183,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "pushover"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -141,7 +191,7 @@ def load_config(args):
 
     int_options = [
         ("snapraid", "deletethreshold"), ("logging", "maxsize"),
-        ("scrub", "older-than"), ("email", "maxsize"),
+        ("scrub", "older-than"), ("email", "maxsize"), ("pushover", "maxsize"),
     ]
     for section, option in int_options:
         try:
@@ -169,6 +219,9 @@ def load_config(args):
 def setup_logger():
     log_format = logging.Formatter(
         "%(asctime)s [%(levelname)-6.6s] %(message)s")
+
+    log_format_notification = logging.Formatter(
+        "%(message)s")
     root_logger = logging.getLogger()
     logging.OUTPUT = 15
     logging.addLevelName(logging.OUTPUT, "OUTPUT")
@@ -197,6 +250,15 @@ def setup_logger():
             # Don't send programm stdout in email
             email_logger.setLevel(logging.INFO)
         root_logger.addHandler(email_logger)
+
+    if config["pushover"]["sendon"]:
+        global notification_log
+        notification_log = StringIO()
+        notification_logger = logging.StreamHandler(notification_log)
+        notification_logger.setFormatter(log_format_notification)
+        notification_logger.setLevel(logging.INFO)
+
+        root_logger.addHandler(notification_logger)
 
 
 def main():
