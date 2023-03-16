@@ -26,6 +26,7 @@ to =
 maxsize = 500
 
 [smtp]
+enabled = false
 host =
 ; leave empty for default port
 port =
@@ -42,3 +43,8 @@ enabled = false
 plan = 12
 ; minimum block age (in days) for scrubbing. Only used with percentage plans
 older-than = 10
+
+[discord]
+enabled = false
+; add webhook URL here
+webhook = 

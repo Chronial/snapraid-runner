@@ -65,6 +65,44 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
         raise subprocess.CalledProcessError(ret, "snapraid " + command)
 
 
+def send_discord(success):
+    import json
+    import urllib.request
+
+    url = config['discord']['webhook']
+
+    if success:
+        body = "SnapRAID job completed successfully:\n"
+    else:
+        body = "Error during SnapRAID job:\n"
+
+    log = email_log.getvalue()
+
+    if len(log) > 2000:
+        log = log[:1800] + '--------- LOG WAS TOO BIG ----------'
+
+    body += f"```\n{log}\n```"
+
+    payload = {
+        'username': 'SnapRAID Runner',
+        'content': body
+    }
+
+    params = json.dumps(payload).encode('utf8')
+    headers = {
+        'content-type': 'application/json',
+        'user-agent': 'snapraid-runner/0.1'
+    }
+
+    try:
+        req = urllib.request.Request(url, method="POST",
+                                     headers=headers)
+        res = urllib.request.urlopen(req, data=params)
+        res.read().decode('utf8')
+    except Exception as e:
+        print(e)
+
+
 def send_email(success):
     import smtplib
     from email.mime.text import MIMEText
@@ -119,7 +157,11 @@ def send_email(success):
 def finish(is_success):
     if ("error", "success")[is_success] in config["email"]["sendon"]:
         try:
-            send_email(is_success)
+            if config['smtp']['enabled']:
+                send_email(is_success)
+
+            if config['discord']['enabled']:
+                send_discord(is_success)
         except Exception:
             logging.exception("Failed to send email")
     if is_success:
@@ -133,7 +175,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "discord"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -149,11 +191,15 @@ def load_config(args):
         except ValueError:
             config[section][option] = 0
 
+    config["smtp"]["enabled"] = (config["smtp"]["enabled"].lower() == "true")
     config["smtp"]["ssl"] = (config["smtp"]["ssl"].lower() == "true")
     config["smtp"]["tls"] = (config["smtp"]["tls"].lower() == "true")
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
+    config["discord"]["enabled"] = (
+        config["discord"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
-    config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["snapraid"]["touch"] = (
+        config["snapraid"]["touch"].lower() == "true")
 
     # Migration
     if config["scrub"]["percentage"]:
