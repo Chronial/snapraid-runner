@@ -64,6 +64,19 @@ def snapraid_command(command, args={}, *, allow_statuscodes=[]):
     else:
         raise subprocess.CalledProcessError(ret, "snapraid " + command)
 
+def send_telegram(success):
+    import requests
+
+    if success:
+        msg = "SnapRAID job completed successfully:\n"
+    else:
+        msg = "Error during SnapRAID job:\n"
+
+    send_text = 'https://api.telegram.org/bot' + config["telegram"]["bot_token"] + '/sendMessage?chat_id=' + config["telegram"]["bot_chatid"] + '&text='
+    
+    send_text = send_text + msg + email_log.getvalue()
+
+    response = requests.get(send_text)
 
 def send_email(success):
     import smtplib
@@ -117,11 +130,14 @@ def send_email(success):
 
 
 def finish(is_success):
-    if ("error", "success")[is_success] in config["email"]["sendon"]:
-        try:
-            send_email(is_success)
-        except Exception:
-            logging.exception("Failed to send email")
+    if (config["snapraid"]["report"].lower() == "email"):
+        if ("error", "success")[is_success] in config["email"]["sendon"]:
+            try:
+                send_email(is_success)
+            except Exception:
+                logging.exception("Failed to send email")
+    else:
+        send_telegram(is_success)
     if is_success:
         logging.info("Run finished successfully")
     else:
@@ -133,7 +149,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "telegram", "smtp", "scrub"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -310,5 +326,11 @@ def run():
     logging.info("All done")
     finish(True)
 
+def test_run():
+    logging.info("=" * 60)
+    logging.info("Run started")
+    logging.info("=" * 60)
+    logging.info("All done")
+    finish(True)
 
 main()

@@ -7,6 +7,8 @@ config = snapraid.conf
 deletethreshold = 40
 ; if you want touch to be ran each time
 touch = false
+; report mode (telegram, mail)
+report = telegram
 
 [logging]
 ; logfile to write to, leave empty to disable
@@ -24,6 +26,10 @@ from =
 to =
 ; maximum email size in KiB
 maxsize = 500
+
+[telegram]
+bot_token = 
+bot_chatID = 
 
 [smtp]
 host =
