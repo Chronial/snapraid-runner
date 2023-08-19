@@ -16,8 +16,6 @@ from io import StringIO
 config = None
 email_log = None
 
-#Test
-
 def tee_log(infile, out_lines, log_level):
     """
     Create a thread that saves all the output on infile to out_lines and
@@ -134,7 +132,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "exclude_diff"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -155,6 +153,8 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["exclude_diff"]["exclude"] = (config["exclude_diff"]["exclude"].lower() == "true")
+    config["exclude_diff"]["paths"] = config["exclude_diff"]["paths"].split("\n")
 
     # Migration
     if config["scrub"]["percentage"]:
@@ -254,6 +254,10 @@ def run():
                       config["snapraid"]["config"])
         finish(False)
 
+    if config["exclude_diff"]["exclude"] and config["exclude_diff"]["paths"] == ['']:
+        logging.error("Exclude directories from diff has been enabled but none have been specified in the config file.")
+        finish(False)
+
     if config["snapraid"]["touch"]:
         logging.info("Running touch...")
         snapraid_command("touch")
@@ -261,6 +265,15 @@ def run():
 
     logging.info("Running diff...")
     diff_out = snapraid_command("diff", allow_statuscodes=[2])
+
+    if config["exclude_diff"]["exclude"]:
+        tmp_diff_out = []
+        for line in diff_out:
+            if line.split(" ")[0] != "remove" or not line.split(" ")[-1].startswith(tuple(config["exclude_diff"]["paths"])):
+                tmp_diff_out.append(line)
+                print(f"miss: {line}")
+        diff_out = tmp_diff_out
+
     logging.info("*" * 60)
 
     diff_results = Counter(line.split(" ")[0] for line in diff_out)
