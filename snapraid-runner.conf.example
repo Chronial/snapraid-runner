@@ -42,3 +42,16 @@ enabled = false
 plan = 12
 ; minimum block age (in days) for scrubbing. Only used with percentage plans
 older-than = 10
+
+[exclude_diff]
+; set to true to fitler out paths from the diff command
+exclude = True
+; paths to exclude form diff threshold check.
+; paths =
+;   dir1/
+;   dir2/subdir/
+; or leave empty for none
+; paths =
+paths = 
+    backup/
+    test/
