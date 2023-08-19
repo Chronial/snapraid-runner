@@ -271,7 +271,6 @@ def run():
         for line in diff_out:
             if line.split(" ")[0] != "remove" or not line.split(" ")[-1].startswith(tuple(config["exclude_diff"]["paths"])):
                 tmp_diff_out.append(line)
-                print(f"miss: {line}")
         diff_out = tmp_diff_out
 
     logging.info("*" * 60)
