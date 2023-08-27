@@ -1,6 +1,6 @@
-# Snapraid Runner Script
+# Snapraid Runner Package
 
-This script runs snapraid and sends its output to the console, a log file and
+This python package runs snapraid and sends its output to the console, a log file and
 via email. All this is configurable.
 
 It can be run manually, but its main purpose is to be run via cronjob/windows
@@ -12,14 +12,17 @@ It supports Windows, Linux and macOS and requires at least python3.7.
 * If you don’t already have it, download and install
   [the latest python version](https://www.python.org/downloads/).
 * Download [the latest release](https://github.com/Chronial/snapraid-runner/releases)
-  of this script and extract it anywhere or clone this repository via git.
+  of this package.
+* Install the release with pip via `python3 -m pip install snapraid-runner-x.x.tar.gz` on Linux or `py -3 -m pip install snapraid-runner-x.x.tar.gz` on Windows
 * Copy/rename the `snapraid-runner.conf.example` to `snapraid-runner.conf` and
   edit its contents. You need to at least configure `snapraid.executable` and
   `snapraid.config`.
   * [The wiki](https://github.com/Chronial/snapraid-runner/wiki/How-to-use-snapraid-runner-with-gmail)
     has details on how to use gmail for sending mail.
-* Run the script via `python3 snapraid-runner.py` on Linux or
- `py -3 snapraid-runner.py` on Windows.
+* Run the script via `snapraid-runner` command on Linux or Windows.
+
+## Uninstalling
+* To uninstall simply run `python3 -m pip uninstall snapraid-runner` on Linux or `py -3 -m pip uninstall snapraid-runner`
 
 ## Features
 * Runs `diff` before `sync` to see how many files were deleted and aborts if
@@ -29,8 +32,8 @@ It supports Windows, Linux and macOS and requires at least python3.7.
 * Can run `scrub` after `sync`
 
 ## Scope of this project and contributions
-Snapraid-runner is supposed to be a small tool with clear focus. It should not
-have any dependencies to keep installation trivial. I always welcome bugfixes
+Snapraid-runner is supposed to be a small tool with clear focus. It should have 
+minimal dependencies to keep installation trivial. I always welcome bugfixes
 and contributions, but be aware that I will not merge new features that I feel
 do not fit the core purpose of this tool.
 
@@ -64,3 +67,19 @@ feature you are missing, you can have a look
 
 ### v0.1 (16 Feb 2014)
 * Initial release
+
+
+# Developers
+To install local build to virtual environment:
+* `python3 -m pip install build`
+* `python3 -m build`
+* `python3 -m venv venv`
+* `source venv/bin/activate`
+* `python3 -m pip install dist/snapraid-runner-x.x.tar.gz`
+
+# Installing
+Install from pypi:
+* `python3 -m pip install snapraid_runner``
+Install from release:
+* download release from https://github.com/Chronial/snapraid-runner/releases
+* install release: `python3 -m pip install snapraid-runner-x.x.tar.gz`

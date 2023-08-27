@@ -311,4 +311,5 @@ def run():
     finish(True)
 
 
-main()
+if __name__ == "__main__":
+    main()
