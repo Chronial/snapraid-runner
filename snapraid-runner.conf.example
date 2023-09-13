@@ -42,3 +42,9 @@ enabled = false
 plan = 12
 ; minimum block age (in days) for scrubbing. Only used with percentage plans
 older-than = 10
+
+[notifications]
+; when to send notifications, comma-separated list of [success, error]
+sendon = success,error
+; https://github.com/caronc/apprise for full list of supported services
+services = mailto://{user}:{password}@hotmail.com,slack://TokenA/TokenB/TokenC/

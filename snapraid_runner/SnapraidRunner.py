@@ -115,6 +115,47 @@ def send_email(success):
         msg.as_string())
     server.quit()
 
+def send_notification(success):
+    import apprise
+    from email.mime.text import MIMEText
+    from email import charset
+
+    ap_asset = apprise.AppriseAsset()
+    apobj = apprise.Apprise(asset=ap_asset)
+
+    for url in config["notifications"]["services"]:
+        if not apobj.add(url):
+            logging.error('\'%s\' is an invalid AppRise URL.' % (url))
+
+    if len(config["notifications"]["services"]) == 0:
+        logging.error("Failed to send email because no notification services are set")
+        return
+
+    # use quoted-printable instead of the default base64
+    charset.add_charset("utf-8", charset.SHORTEST, charset.QP)
+    if success:
+        body = "SnapRAID job completed successfully:\n\n\n"
+    else:
+        body = "Error during SnapRAID job:\n\n\n"
+
+    log = email_log.getvalue()
+    maxsize = config['email'].get('maxsize', 500) * 1024
+    if maxsize and len(log) > maxsize:
+        cut_lines = log.count("\n", maxsize // 2, -maxsize // 2)
+        log = (
+            "NOTE: Log was too big for email and was shortened\n\n" +
+            log[:maxsize // 2] +
+            "[...]\n\n\n --- LOG WAS TOO BIG - {} LINES REMOVED --\n\n\n[...]".format(
+                cut_lines) +
+            log[-maxsize // 2:])
+    body += log
+
+    title = config["email"]["subject"] + \
+        (" SUCCESS" if success else " ERROR")
+
+    apobj.notify(body=body, title=title)
+
+
 
 def finish(is_success):
     if ("error", "success")[is_success] in config["email"]["sendon"]:
@@ -122,6 +163,11 @@ def finish(is_success):
             send_email(is_success)
         except Exception:
             logging.exception("Failed to send email")
+    if ("error", "success")[is_success] in config["notifications"]["sendon"]:
+        try:
+            send_notification(is_success)
+        except Exception:
+            logging.exception("Failed to send notifications")
     if is_success:
         logging.info("Run finished successfully")
     else:
@@ -133,7 +179,7 @@ def load_config(args):
     global config
     parser = configparser.RawConfigParser()
     parser.read(args.conf)
-    sections = ["snapraid", "logging", "email", "smtp", "scrub"]
+    sections = ["snapraid", "logging", "email", "smtp", "scrub", "notifications"]
     config = dict((x, defaultdict(lambda: "")) for x in sections)
     for section in parser.sections():
         for (k, v) in parser.items(section):
@@ -154,6 +200,7 @@ def load_config(args):
     config["scrub"]["enabled"] = (config["scrub"]["enabled"].lower() == "true")
     config["email"]["short"] = (config["email"]["short"].lower() == "true")
     config["snapraid"]["touch"] = (config["snapraid"]["touch"].lower() == "true")
+    config["notifications"]["services"] = config["notifications"]["services"].split(',')
 
     # Migration
     if config["scrub"]["percentage"]:
@@ -311,4 +358,5 @@ def run():
     finish(True)
 
 
-main()
+if __name__ == "__main__":
+    main()

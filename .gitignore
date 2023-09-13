@@ -1,1 +1,10 @@
 snapraid-runner.conf
+__pycache__
+.idea
+*.pyc
+build
+dist
+venv
+*.egg-info*
+.vscode/settings.json
+snapraid.log
