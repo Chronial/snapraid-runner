@@ -200,9 +200,10 @@ def setup_logger():
 
 
 def main():
+    dir = os.path.dirname(os.path.realpath(__file__))
     parser = argparse.ArgumentParser()
     parser.add_argument("-c", "--conf",
-                        default="snapraid-runner.conf",
+                        default=os.path.join(dir,"snapraid-runner.conf"),
                         metavar="CONFIG",
                         help="Configuration file (default: %(default)s)")
     parser.add_argument("--no-scrub", action='store_false',
